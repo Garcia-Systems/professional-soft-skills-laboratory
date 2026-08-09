@@ -91,6 +91,27 @@ python -m soft_skills_lab scenario database-migration
 python -m soft_skills_lab evaluate database-migration decision-oriented
 ```
 
+Practice Chapter 5's decision-useful status updates:
+
+```bash
+python -m soft_skills_lab scenario integration-delivery
+python -m soft_skills_lab evaluate integration-delivery no-update
+python -m soft_skills_lab evaluate integration-delivery activity-dump
+python -m soft_skills_lab evaluate integration-delivery false-green
+python -m soft_skills_lab evaluate integration-delivery vague-risk
+python -m soft_skills_lab evaluate integration-delivery over-detailed
+python -m soft_skills_lab evaluate integration-delivery decision-useful
+python -m soft_skills_lab compare integration-delivery
+python -m soft_skills_lab status integration-delivery decision-useful
+python -m soft_skills_lab status integration-delivery decision-useful --audience jordan
+python -m soft_skills_lab status integration-delivery decision-useful --audience morgan
+python -m soft_skills_lab status integration-delivery decision-useful --audience business
+python -m soft_skills_lab scenario credential-blocker
+python -m soft_skills_lab evaluate credential-blocker actionable-escalation
+python -m soft_skills_lab status credential-blocker actionable-escalation
+python -m soft_skills_lab evaluate verification-completion closed-loop
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -100,7 +121,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 2. **Listening Before Responding** (implemented)
 3. **Asking Good Questions** (implemented)
 4. **Explaining Technical Ideas Simply** (implemented)
-5. Giving Status Updates
+5. **Giving Status Updates** (implemented)
 6. Saying “I Don’t Know” Professionally
 7. Receiving Feedback Without Defensiveness
 8. Taking Responsibility

@@ -3,12 +3,13 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_status_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
 from soft_skills_lab.scenarios.questions import REPORT_ANSWERS, REPORT_EXPORT, REPORT_RESPONSES, apply_answers
 from soft_skills_lab.scenarios.explanations import AUDIENCE_EXPLANATIONS, PAYMENT_RESPONSES
+from soft_skills_lab.scenarios.status_updates import INTEGRATION_TIMELINE, PRIMARY_RESPONSE_IDS as STATUS_RESPONSE_IDS, STATUS_AUDIENCE_UPDATES
 from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
 
 
@@ -33,6 +34,10 @@ def build_parser() -> argparse.ArgumentParser:
     explain.add_argument("--audience", required=True)
     layers = commands.add_parser("layers", help="inspect explicit information layers")
     layers.add_argument("scenario_id")
+    status = commands.add_parser("status", help="inspect authored structured status metadata")
+    status.add_argument("scenario_id")
+    status.add_argument("response_id")
+    status.add_argument("--audience", choices=("jordan", "morgan", "business"))
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     return parser
 
@@ -50,6 +55,9 @@ def _scenario_text(scenario_id: str) -> str:
         lines.extend(f"- {item}" for item in COMMITMENT.dependencies)
         lines.append("\nTimeline:")
         lines.extend(f"- Day {event.point}: {event.description}" for event in TIMELINE)
+    elif scenario_id == "integration-delivery":
+        lines.append("\nTimeline:")
+        lines.extend(f"- T{event.point}: {event.description}" for event in INTEGRATION_TIMELINE)
     lines.append("\nReference responses:")
     lines.extend(f"- {response.response_id}: {response.label}" for response in list_responses(scenario_id))
     return "\n".join(lines)
@@ -59,7 +67,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.explanation_context is not None or scenario_id == "database-migration":
+    if scenario_id in ("integration-delivery", "credential-blocker", "verification-completion"):
+        results = evaluate_status_response(scenario, response)
+    elif scenario.explanation_context is not None or scenario_id == "database-migration":
         results = evaluate_explanation(response)
     elif scenario.question_context:
         results = evaluate_question_response(scenario, response)
@@ -84,6 +94,17 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "integration-delivery":
+        headings = ("STATE", "PROGRESS", "RISK", "DEPENDENCY", "BLOCKER", "FORECAST", "FOLLOW-UP", "DETAIL")
+        ids = ("states-current-state", "communicates-material-progress", "communicates-risk", "communicates-dependency-impact",
+               "labels-blocker-correctly", "provides-forecast-basis", "establishes-next-update", "avoids-unnecessary-detail")
+        lines = [f"{'PATH':20} " + " ".join(f"{item:11}" for item in headings)]
+        scenario = get_scenario(scenario_id)
+        for response_id in STATUS_RESPONSE_IDS:
+            results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_status_response(scenario, get_response(scenario_id, response_id))}
+            lines.append(f"{response_id:20} " + " ".join(f"{results[item]:11}" for item in ids))
+        lines.append("\nUseful status exposes state and decisions; this is not a diary-detail score.")
+        return "\n".join(lines)
     if scenario_id == "payment-timeout":
         headings = ("TRUTH", "IMPACT", "UNCERTAINTY", "AUDIENCE", "DECISION")
         ids = ("preserves-technical-truth", "communicates-impact", "preserves-uncertainty", "matches-audience-need", "supports-decision")
@@ -199,6 +220,33 @@ def _layers_text(scenario_id: str) -> str:
     return "\n".join(lines).rstrip()
 
 
+def _status_text(scenario_id: str, response_id: str, audience_id: str | None = None) -> str:
+    response = STATUS_AUDIENCE_UPDATES[audience_id] if audience_id and scenario_id == "integration-delivery" else get_response(scenario_id, response_id)
+    update = response.status_update
+    if update is None:
+        raise KeyError(f"structured status unavailable for {scenario_id}: {response_id}")
+    lines = ["SUBJECT", update.subject, "", "CURRENT STATE", update.current_state.value.replace("_", " ").title() if update.current_state else "Not stated"]
+    sections = (("COMPLETED", update.completed_work), ("REMAINING", update.remaining_work), ("BLOCKERS", update.blockers),
+                ("RISK", update.risks), ("UNCERTAINTIES", update.uncertainties), ("DEPENDENCY IMPACT", update.dependency_impact))
+    for heading, items in sections:
+        if items:
+            lines.extend(("", heading, *(f"- {item}" for item in items)))
+    singles = (("NEXT ACTION", update.next_action), ("NEEDED ACTION", update.requested_action),
+               ("DEPENDENCY OWNER", update.dependency_owner), ("DECISION POINT", update.decision_point))
+    for heading, value in singles:
+        if value:
+            lines.extend(("", heading, value))
+    if update.forecast:
+        qualifier = f" if {update.forecast.condition}" if update.forecast.condition else ""
+        lines.extend(("", "FORECAST", f"{update.forecast.target}{qualifier}", f"Basis: {update.forecast.basis}",
+                      "Type: guarantee" if update.forecast.guaranteed else "Type: evidence-based estimate"))
+    if update.next_update_point is not None:
+        lines.extend(("", "NEXT UPDATE", f"T{update.next_update_point}"))
+    if audience_id:
+        lines.extend(("", "AUDIENCE VIEW", audience_id, "Underlying fact IDs: " + ", ".join(response.communicated_fact_ids)))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -218,6 +266,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _explain_text(args.scenario_id, args.audience)
         elif args.command == "layers":
             output = _layers_text(args.scenario_id)
+        elif args.command == "status":
+            output = _status_text(args.scenario_id, args.response_id, args.audience)
         else:
             output = _trust_text()
     except KeyError as error:
