@@ -112,6 +112,25 @@ python -m soft_skills_lab status credential-blocker actionable-escalation
 python -m soft_skills_lab evaluate verification-completion closed-loop
 ```
 
+Practice Chapter 6's explicit, bounded uncertainty:
+
+```bash
+python -m soft_skills_lab scenario profile-update-failure
+python -m soft_skills_lab evaluate profile-update-failure bluff
+python -m soft_skills_lab evaluate profile-update-failure defensive-certainty
+python -m soft_skills_lab evaluate profile-update-failure empty-unknown
+python -m soft_skills_lab evaluate profile-update-failure speculative-answer
+python -m soft_skills_lab evaluate profile-update-failure investigation-dump
+python -m soft_skills_lab evaluate profile-update-failure bounded-uncertainty
+python -m soft_skills_lab compare profile-update-failure
+python -m soft_skills_lab evidence profile-update-failure
+python -m soft_skills_lab uncertainty profile-update-failure
+python -m soft_skills_lab evaluate profile-fix-estimate learning-point
+python -m soft_skills_lab evaluate judgment-under-pressure bounded-judgment
+python -m soft_skills_lab evaluate migration-safety-unknown inspect-first
+python -m soft_skills_lab evaluate customer-payment-verification customer-safe
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -122,7 +141,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 3. **Asking Good Questions** (implemented)
 4. **Explaining Technical Ideas Simply** (implemented)
 5. **Giving Status Updates** (implemented)
-6. Saying “I Don’t Know” Professionally
+6. **Saying “I Don’t Know” Professionally** (implemented)
 7. Receiving Feedback Without Defensiveness
 8. Taking Responsibility
 9. Disagreeing Professionally
