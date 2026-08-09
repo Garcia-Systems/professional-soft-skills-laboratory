@@ -62,6 +62,9 @@ class TrustEventKind(Enum):
     TECHNICAL_CONSTRAINT_HIDDEN = (-2, "Technical constraint hidden")
     STAKEHOLDER_CONTEXT_DISMISSED = (-2, "Stakeholder context dismissed")
     UNSUPPORTED_COMMITMENT_MADE = (-3, "Unsupported commitment made")
+    ASSUMPTION_MADE_VISIBLE = (1, "Assumption made visible")
+    REQUIREMENT_DECISION_RECORDED = (2, "Requirement decision recorded")
+    MATERIAL_SEMANTICS_ASSUMED = (-2, "Material semantics silently assumed")
 
     @property
     def weight(self) -> int:
@@ -151,4 +154,11 @@ STAKEHOLDER_EVENTS = (
     TrustEvent(TrustEventKind.SCOPE_CHANGE_MADE_EXPLICIT, "Scheduling was treated as a decision, not silently absorbed."),
     TrustEvent(TrustEventKind.COMMITMENT_ALIGNED_TO_DECISION, "Alex waited for selected scope before committing."),
     TrustEvent(TrustEventKind.POSITION_UPDATED_AFTER_NEW_EVIDENCE, "Alex changed course when .xlsx became required."),
+)
+
+REQUIREMENT_EVENTS = (
+    TrustEvent(TrustEventKind.ASSUMPTION_MADE_VISIBLE, "Alex recorded the reversible filename convention and validation point."),
+    TrustEvent(TrustEventKind.CONCERN_RAISED_WITH_EVIDENCE, "Alex surfaced format and pending semantics with their evidence."),
+    TrustEvent(TrustEventKind.REQUIREMENT_DECISION_RECORDED, "Product decisions and acceptance conditions were added to history."),
+    TrustEvent(TrustEventKind.DECISION_SUPPORTED_AFTER_RESOLUTION, "Alex aligned implementation and tests to the explicit contract."),
 )
