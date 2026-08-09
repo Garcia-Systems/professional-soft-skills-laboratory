@@ -11,6 +11,9 @@ from soft_skills_lab.domain.models import (
     RiskLevel,
     WorkplaceScenario,
     TimelineEvent,
+    DecisionAlternative,
+    DecisionContext,
+    DecisionIssueKind,
 )
 
 __all__ = [
@@ -24,4 +27,7 @@ __all__ = [
     "RiskLevel",
     "WorkplaceScenario",
     "TimelineEvent",
+    "DecisionAlternative",
+    "DecisionContext",
+    "DecisionIssueKind",
 ]

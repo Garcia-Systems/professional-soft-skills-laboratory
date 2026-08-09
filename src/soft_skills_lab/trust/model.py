@@ -25,6 +25,14 @@ class TrustEventKind(Enum):
     BLAME_SHIFTED = (-1, "Blame shifted")
     KNOWN_RESPONSIBILITY_DENIED = (-2, "Known responsibility denied")
     SAME_AVOIDABLE_FAILURE_REPEATED = (-3, "Same avoidable failure repeated")
+    CONCERN_RAISED_WITH_EVIDENCE = (2, "Concern raised with evidence")
+    DECISION_SUPPORTED_AFTER_RESOLUTION = (2, "Decision supported after resolution")
+    POSITION_UPDATED_AFTER_NEW_EVIDENCE = (2, "Position updated after new evidence")
+    MATERIAL_RISK_ESCALATED = (2, "Material risk escalated")
+    RELEVANT_CONCERN_WITHHELD = (-2, "Relevant concern withheld")
+    DISAGREEMENT_PERSONALIZED = (-2, "Disagreement personalized")
+    DECISION_UNDERMINED_AFTER_RESOLUTION = (-3, "Decision undermined after resolution")
+    UNSUPPORTED_ARGUMENT_REPEATED = (-2, "Unsupported argument repeated")
 
     @property
     def weight(self) -> int:
@@ -74,4 +82,11 @@ RESPONSIBILITY_LEARNING_EVENTS = (
     TrustEvent(TrustEventKind.PREVENTIVE_ACTION_COMPLETED, "Staging validation became a deployment gate."),
     TrustEvent(TrustEventKind.CHANGED_BEHAVIOR_DEMONSTRATED, "Alex ran the gate and stopped a later invalid endpoint before production."),
     TrustEvent(TrustEventKind.IMPACTED_PARTY_FOLLOWED_UP, "Alex reported the stopped deployment and closed the incident follow-up."),
+)
+
+DISAGREEMENT_EVENTS = (
+    TrustEvent(TrustEventKind.CONCERN_RAISED_WITH_EVIDENCE, "Alex surfaced vendor-change evidence before Morgan's call."),
+    TrustEvent(TrustEventKind.DECISION_SUPPORTED_AFTER_RESOLUTION, "Alex documented the tradeoff and implemented the resolved choice."),
+    TrustEvent(TrustEventKind.POSITION_UPDATED_AFTER_NEW_EVIDENCE, "Alex withdrew an objection after the benchmark changed the evidence."),
+    TrustEvent(TrustEventKind.MATERIAL_RISK_ESCALATED, "Alex escalated customer-data exposure through the appropriate path."),
 )

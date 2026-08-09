@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -12,7 +12,7 @@ from soft_skills_lab.scenarios.explanations import AUDIENCE_EXPLANATIONS, PAYMEN
 from soft_skills_lab.scenarios.status_updates import INTEGRATION_TIMELINE, PRIMARY_RESPONSE_IDS as STATUS_RESPONSE_IDS, STATUS_AUDIENCE_UPDATES
 from soft_skills_lab.scenarios.uncertainty import PROFILE_RESPONSES
 from soft_skills_lab.evaluation.uncertainty import CRITERIA as UNCERTAINTY_CRITERIA
-from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
+from soft_skills_lab.trust import DEMO_EVENTS, DISAGREEMENT_EVENTS, ProfessionalTrust
 from soft_skills_lab.scenarios.feedback import PRIMARY_RESPONSE_IDS as FEEDBACK_RESPONSE_IDS
 from soft_skills_lab.trust import FEEDBACK_IMPROVEMENT_EVENTS
 from soft_skills_lab.scenarios.responsibility import PRIMARY_RESPONSE_IDS as RESPONSIBILITY_RESPONSE_IDS
@@ -56,7 +56,10 @@ def build_parser() -> argparse.ArgumentParser:
     responsibility.add_argument("scenario_id")
     learning = commands.add_parser("learning", help="inspect later observable responsibility follow-through")
     learning.add_argument("scenario_id")
+    decision = commands.add_parser("decision", help="inspect decision ownership, alternatives, and evidence")
+    decision.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
+    commands.add_parser("disagreement-trust", help="show constructive disagreement trust evidence")
     return parser
 
 
@@ -85,7 +88,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.responsibility_map is not None or scenario_id == "responsibility-follow-up":
+    if scenario.decision_context is not None:
+        results = evaluate_disagreement_response(scenario, response)
+    elif scenario.responsibility_map is not None or scenario_id == "responsibility-follow-up":
         results = evaluate_responsibility_response(scenario, response)
     elif scenario.feedback is not None or scenario_id == "feedback-follow-up":
         results = evaluate_feedback_response(scenario, response)
@@ -118,6 +123,17 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "adapter-boundary":
+        headings = ("UNDERSTANDS", "EVIDENCE", "NO-PERSONAL", "ALTERNATIVE", "DECISION")
+        ids = ("captures-explicit-concern", "uses-decision-relevant-evidence", "avoids-personalization", "offers-constructive-alternative", "respects-decision-ownership")
+        primary = ("passive-agreement", "flat-rejection", "authority-challenge", "defensive-ownership", "jargon-battle", "evidence-based-disagreement", "disagree-and-commit")
+        lines = [f"{'PATH':31} " + " ".join(f"{item:13}" for item in headings)]
+        scenario = get_scenario(scenario_id)
+        for response_id in primary:
+            results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_disagreement_response(scenario, get_response(scenario_id, response_id))}
+            lines.append(f"{response_id:31} " + " ".join(f"{results[item]:13}" for item in ids))
+        lines.append("\nDimensions remain separate; this is not a collaboration, dominance, or personality score.")
+        return "\n".join(lines)
     if scenario_id == "skipped-validation":
         headings = ("OWN PART", "NO BLAME", "CONTEXT", "IMPACT", "ACTION")
         ids = ("identifies-own-contribution", "does-not-shift-blame",
@@ -250,6 +266,16 @@ def _trust_text() -> str:
         trust = trust.record(event)
         lines.append(f"{number}. {event.kind.label} ({event.kind.weight:+d}): {event.detail}")
     lines.extend(("", f"Resulting evidence balance: {trust.balance}", "The history—not likability or personality—explains this state."))
+    return "\n".join(lines)
+
+
+def _disagreement_trust_text() -> str:
+    trust = ProfessionalTrust()
+    lines = ["CONSTRUCTIVE DISAGREEMENT TRUST EVIDENCE"]
+    for event in DISAGREEMENT_EVENTS:
+        trust = trust.record(event)
+        lines.append(f"- {event.kind.label} ({event.kind.weight:+d}): {event.detail}")
+    lines.extend(("", f"Evidence balance: {trust.balance}", "The inspectable history—not agreement or likability—supports trust."))
     return "\n".join(lines)
 
 
@@ -399,6 +425,29 @@ def _learning_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
+def _decision_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).decision_context
+    if context is None:
+        raise KeyError(f"decision inspection unavailable for scenario: {scenario_id}")
+    lines = ["DECISION", context.decision, "", "SHARED OBJECTIVE", context.shared_objective,
+             "", "DECISION OWNER", context.owner, "", "CONTRIBUTORS", *(f"- {item}" for item in context.contributors)]
+    for alternative in context.alternatives:
+        lines.extend(("", f"EVIDENCE FOR {alternative.name.upper()}"))
+        lines.extend(f"- {item}" for item in alternative.evidence)
+        if not alternative.evidence:
+            lines.append("- No differentiating evidence established.")
+    if context.constraints:
+        lines.extend(("", "CONSTRAINTS", *(f"- {item}" for item in context.constraints)))
+    if context.unresolved_risks:
+        lines.extend(("", "UNRESOLVED TRADEOFF", *(f"- {item}" for item in context.unresolved_risks)))
+    if context.final_choice:
+        lines.extend(("", "FINAL CHOICE", context.final_choice))
+    if context.rationale:
+        lines.extend(("", "RATIONALE", context.rationale))
+    lines.extend(("", "ISSUE KIND", context.issue_kind.value, "REVERSIBLE", "yes" if context.reversible else "no"))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -432,6 +481,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _responsibility_text(args.scenario_id)
         elif args.command == "learning":
             output = _learning_text(args.scenario_id)
+        elif args.command == "decision":
+            output = _decision_text(args.scenario_id)
+        elif args.command == "disagreement-trust":
+            output = _disagreement_trust_text()
         else:
             output = _trust_text()
     except KeyError as error:
