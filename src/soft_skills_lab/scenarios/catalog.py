@@ -49,6 +49,7 @@ from soft_skills_lab.scenarios.meetings import SCENARIOS as MEETING_SCENARIOS
 from soft_skills_lab.scenarios.writing import DEPLOYMENT_RISK, RESPONSES as WRITING_RESPONSES
 from soft_skills_lab.scenarios.trust_history import SCENARIOS as TRUST_SCENARIOS
 from soft_skills_lab.scenarios.leadership import SCENARIOS as LEADERSHIP_SCENARIOS
+from soft_skills_lab.scenarios.judgment import SCENARIOS as JUDGMENT_SCENARIOS
 
 PRODUCTION_INCIDENT = WorkplaceScenario(
     scenario_id="production-incident",
@@ -152,6 +153,7 @@ SCENARIOS.update(MEETING_SCENARIOS)
 SCENARIOS[DEPLOYMENT_RISK.scenario_id] = (DEPLOYMENT_RISK, WRITING_RESPONSES)
 SCENARIOS.update(TRUST_SCENARIOS)
 SCENARIOS.update(LEADERSHIP_SCENARIOS)
+SCENARIOS.update(JUDGMENT_SCENARIOS)
 
 
 def get_scenario(scenario_id: str) -> WorkplaceScenario:

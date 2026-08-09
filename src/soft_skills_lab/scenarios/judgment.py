@@ -1,0 +1,63 @@
+"""Chapter 23: deterministic contexts where professional principles compete."""
+from soft_skills_lab.domain.models import (JudgmentContext, JudgmentOption, JudgmentRecord,
+    Outcome, Participant, ProfessionalChoice, ProfessionalResponse, RiskLevel, WorkplaceScenario)
+
+PEOPLE=(Participant("Alex","developer"),Participant("Morgan","manager"),Participant("Dana","operations stakeholder"),Participant("Jordan","teammate"))
+CRITERIA=("matches-action-to-risk","matches-action-to-authority","considers-reversibility","considers-delay-cost","uses-available-evidence-before-acting","acts-before-certainty-when-risk-requires","refuses-boundary-violation","uses-proportional-escalation","allows-multiple-defensible-options","judges-from-known-at-the-time")
+def marks(*values): return tuple(zip(CRITERIA, values))
+P=Outcome.PASS; A=Outcome.PARTIAL; F=Outcome.FAIL
+
+def option(i, action, acceptable, benefits, risks, authority="Within Alex's routine boundary", rev="High", delay="Context dependent", evidence="Use facts available at this time", conditions=()):
+    return JudgmentOption(i,action,(benefits,),(risks,),authority,rev,delay,evidence,acceptable,conditions)
+
+T2=JudgmentContext("Alex","Unexpected production timeout configuration.","T2",(
+ "Current value: 30 seconds.","Documented normal value: 10 seconds.","No active incident.","Changing production may affect in-flight requests.","No change request documents 30 seconds.",
+),("Whether 30 seconds was intentionally introduced.",),"LOW","Low during a short investigation; an unjustified production change has impact.","HIGH, but production impact exists.","Alex can make routine configuration corrections; production-impacting changes are communicated.","Alex for routine correction; Morgan for an unresolved non-routine tradeoff.",("Act","Investigate and inform","Escalate","Wait"),("A production change can affect in-flight requests.",),("Communicate production-impacting changes.",),"Deployment history and incident notes are cheap to inspect now.","LOW for a short investigation period.","INVESTIGATE + INFORM","Evidence is insufficient for a production change and waiting briefly has low cost.",(
+ option("act-immediately","Change to 10 seconds now",F,"Fast correction if assumption is right","Undocumented does not prove incorrect"),
+ option("investigate-and-inform","Inspect history, inform Morgan, and set follow-up",P,"Reduces uncertainty cheaply","Briefly preserves ambiguous state"),
+ option("escalate-emergency","Page leadership/security",A,"Makes uncertainty visible","Disruptive and disproportionate without an incident"),
+ option("ignore","Do nothing and record nothing",F,"No immediate change risk","Leaves production ambiguity invisible"),
+ option("wait-indefinitely","Wait only for Morgan",F,"Avoids an uncertain change","Needlessly avoids available investigation"),))
+T3=JudgmentContext("Alex","Production degradation linked to the timeout.","T3",(
+ "The 30-second timeout is causing worker saturation.","Queue depth is rapidly increasing.","Payment processing degradation has started.","Returning to 10 seconds is a known reversible containment action.",
+),("The complete reason the value was introduced.",),"HIGH","Active payment degradation and increasing saturation.","HIGH; the known rollback is observable.","Alex may make routine corrections and incident containment within the working agreement.","Alex owns containment; Morgan/operations own broader incident decisions.",("Contain and inform/escalate","Wait","Continue diagnosis"),("Payment workers and customers are exposed." ,),("Follow the incident communication path; preserve validation."),"Investigation can continue after containment.","HIGH: waiting increases queue depth and degradation.","ACT TO CONTAIN + INFORM/ESCALATE","New impact evidence makes prompt reversible containment appropriate before complete diagnosis.",(
+ option("act-immediately","Return to 10 seconds and immediately communicate",P,"Contains active degradation","Requires monitoring and coordination"),
+ option("investigate-and-inform","Investigate before containing",A,"May improve diagnosis","Delay permits degradation to grow"),
+ option("escalate-emergency","Activate the appropriate incident path",P,"Coordinates material impact","Escalation still must remain proportional"),
+ option("ignore","Do nothing",F,"None","Material risk grows"),option("wait-indefinitely","Wait for Morgan",F,"Defers authority question","Delay worsens harm"),))
+
+BASE=WorkplaceScenario("production-timeout","Production configuration ambiguity","Alex finds a production timeout that differs from documentation.",PEOPLE,T2.known_facts,T2.unknowns,(),RiskLevel.LOW,judgment_contexts=(T2,T3),judgment_record=JudgmentRecord(T2.situation,"T2",T2.known_facts,T2.unknowns,"Investigate and inform",T2.rationale,"Alex","Resolve intent without unnecessary production impact.","One hour or sooner if impact appears","At T3 degradation appeared, so Alex changed to containment."))
+RESPONSES={
+ "act-immediately":ProfessionalResponse("act-immediately","Act immediately","I changed it to 10 seconds without investigating.",professional_choice=ProfessionalChoice.ACT,contextual_judgment_outcomes=(("T2",marks(F,A,A,P,F,F,P,F,A,P)),("T3",marks(P,P,P,P,A,P,P,P,A,P))),trust_evidence=("adjusted_decision_after_new_evidence",)),
+ "escalate-emergency":ProfessionalResponse("escalate-emergency","Escalate as emergency","I paged leadership and security.",professional_choice=ProfessionalChoice.ESCALATE,contextual_judgment_outcomes=(("T2",marks(F,P,P,P,A,F,P,F,A,P)),("T3",marks(P,P,P,P,A,P,P,P,A,P))),trust_evidence=("unnecessary_escalation",)),
+ "ignore":ProfessionalResponse("ignore","Ignore","I recorded nothing and took no action.",professional_choice=ProfessionalChoice.WAIT,contextual_judgment_outcomes=(("T2",marks(F,A,F,F,F,F,P,F,A,P)),("T3",marks(F,F,F,F,F,F,P,F,A,P))),trust_evidence=("material_risk_ignored",)),
+ "wait-indefinitely":ProfessionalResponse("wait-indefinitely","Wait indefinitely","I will do nothing until Morgan returns.",professional_choice=ProfessionalChoice.WAIT,contextual_judgment_outcomes=(("T2",marks(A,P,P,F,F,F,P,P,A,P)),("T3",marks(F,F,A,F,F,F,P,F,A,P)))),
+ "investigate-and-inform":ProfessionalResponse("investigate-and-inform","Investigate and inform","I will inspect configuration and incident history, leave Morgan a concise update, and review in one hour; if impact appears I will contain and notify operations.",professional_choice=ProfessionalChoice.INFORM,contextual_judgment_outcomes=(("T2",marks(P,P,P,P,P,A,P,P,A,P)),("T3",marks(A,P,P,F,A,F,P,A,A,P))),trust_evidence=("acted_within_authority","documented_rationale")),}
+
+def focused(sid,title,facts,unknowns,choice,message,outcomes,trust=(),risk=RiskLevel.MODERATE,policy=()):
+ c=JudgmentContext("Alex",title,"T2",facts,unknowns,risk.name,"Scenario-authored impact.","As stated in facts.","Use delegated scope; route decisions outside it.","The named owner, or identify the missing owner.",(choice.value,),(),policy,"Only cheap relevant evidence should delay action.","Scenario-authored delay cost.",choice.value,message)
+ s=WorkplaceScenario(sid,title,message,PEOPLE,facts,unknowns,(),risk,judgment_contexts=(c,))
+ r=ProfessionalResponse("professional",choice.value.title(),message,professional_choice=choice,judgment_outcomes=outcomes,trust_evidence=trust)
+ return sid,(s,{"professional":r})
+
+AUX=dict((focused(*x) for x in (
+("owned-unit-test","Ask versus act",("Cause is clear; fix is local, reversible, and owned by Alex.",),(),ProfessionalChoice.ACT,"Fix it, run tests, and avoid unnecessary upward delegation.",marks(P,P,P,P,P,A,P,P,A,P),("acted_within_authority",)),
+("risk-metadata-exposure","Ask versus escalate",("A production field may expose internal risk metadata.",),("Full diagnosis.",),ProfessionalChoice.ESCALATE,"Contain and escalate before certainty because potential harm is high.",marks(P,P,P,P,A,P,P,P,A,P),("escalated_material_risk",),RiskLevel.HIGH),
+("bounded-teammate-help","Help while protecting commitment",("Jordan is blocked; 15 minutes likely unblocks them; takeover jeopardizes Alex's due work.",),(),ProfessionalChoice.ACT,"Give 15 minutes of context, return ownership, then preserve the existing commitment.",marks(P,P,P,P,P,A,P,P,A,P),("surfaced_tradeoff",)),
+("manager-cosmetic-ship","Manager says ship: ordinary tradeoff",("Defect is cosmetic; Morgan owns release; concern was raised.",),(),ProfessionalChoice.COMMIT,"Disagree once with evidence, accept Morgan's legitimate decision, and ship.",marks(P,P,P,P,P,A,P,P,A,P)),
+("manager-unsafe-ship","Manager says ship: security boundary",("The defect can expose unauthorized customer data.",),(),ProfessionalChoice.REFUSE,"State the risk, refuse the release under the explicit security policy, and escalate appropriately.",marks(P,P,P,P,P,P,P,P,A,P),("refused_boundary_violation","escalated_material_risk"),RiskLevel.CRITICAL,("Unauthorized-data exposure prohibits release.",)),
+("safe-default-requirement","Low-value ambiguity",("Core behavior and security are explicit; label and filename are ambiguous and reversible.",),(),ProfessionalChoice.ACT,"Use established safe defaults, record them, and proceed.",marks(P,P,P,P,P,A,P,P,A,P)),
+("privacy-capacity-judgment","Privacy and work visibility",("Alex cannot safely deploy but can document.",),("Private cause.",),ProfessionalChoice.INFORM,"Disclose capacity, protect the cause, and request deployment reassignment.",marks(P,P,P,P,P,A,P,P,A,P)),
+("release-window-uncertainty","Waiting has consequences",("Decision is due before T5; a reversible release and rollback monitoring exist.",),("Perfect certainty.",),ProfessionalChoice.ACT,"Record assumptions, choose the reversible path, monitor, and roll back if needed.",marks(P,P,P,P,P,P,P,P,A,P)),
+("architecture-experiment","Reversible experiment",("Both prototypes are safe.",),("Which performs better.",),ProfessionalChoice.ACT,"Time-box a prototype and define the deciding evidence.",marks(P,P,P,P,P,A,P,P,A,P),("used_reversible_experiment",)),
+("historical-data-cleanup","Irreversible data action",("Deletion is permanent; requirement is ambiguous; backup is uncertain.",),("Requirement and backup status.",),ProfessionalChoice.PAUSE,"Pause and verify requirement and backup before deletion.",marks(P,P,P,P,P,A,P,P,A,P)),
+("deadline-validation","Deadline versus validation",("Deadline requires skipping mandatory validation.",),(),ProfessionalChoice.SAY_NO,"Preserve validation; surface deadline risk and request a scope or timing decision.",marks(P,P,P,P,P,A,P,P,A,P),("surfaced_tradeoff",)),
+("scheduled-export-scope","Say no through tradeoff",("Current delivery is at risk; scheduling is unnecessary today.",),(),ProfessionalChoice.SAY_NO,"Not in today's scope: preserve today's delivery, or add scheduling and move the date.",marks(P,P,P,P,P,A,P,P,A,P),("surfaced_tradeoff",)),
+("falsify-validation","Explicit integrity refusal",("Policy requires real validation; teammate asks Alex to mark it passed without running it.",),(),ProfessionalChoice.REFUSE,"Refuse to falsify validation, explain the boundary, and escalate if pressure persists.",marks(P,P,P,P,P,P,P,P,A,P),("refused_boundary_violation",),RiskLevel.HIGH,("Validation results must reflect a real run.",)),
+("naming-escalation","Proportional escalation",("Only a small naming preference is disputed.",),(),ProfessionalChoice.ACT,"Use team convention; do not involve executives.",marks(P,P,P,P,P,A,P,P,A,P)),
+("unknown-decision-owner","Incomplete authority",("Nobody present knows who owns the material choice.",),("Decision owner.",),ProfessionalChoice.DEFER,"Identify and route to the legitimate owner; do not assume authority.",marks(P,P,P,P,P,A,P,P,A,P)),
+("defensible-implementation","Multiple defensible choices",("Choice is low impact, reversible, and convention exists; a quick clarification is available.",),(),ProfessionalChoice.ACT,"Either act using convention and inform, or ask quickly; both fit the timing.",marks(P,P,P,P,P,A,P,P,P,P)),
+("reasonable-bad-outcome","Reasonable judgment, bad outcome",("Evidence supported a reversible choice; policy was followed and risk communicated.",),(),ProfessionalChoice.ACT,"The later bad outcome does not rewrite reasonable judgment at the time.",marks(P,P,P,P,P,A,P,P,A,P),("documented_rationale",)),
+("reckless-good-outcome","Weak judgment, good outcome",("Required validation was skipped, but the release happened to succeed.",),(),ProfessionalChoice.REFUSE,"The lucky outcome does not make the unsafe shortcut good judgment.",marks(P,P,P,P,P,A,P,P,A,P),("unsafe_shortcut",)),
+)))
+SCENARIOS={BASE.scenario_id:(BASE,RESPONSES),**AUX}

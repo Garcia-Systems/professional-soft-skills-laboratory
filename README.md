@@ -424,6 +424,21 @@ python -m soft_skills_lab evaluate cross-team-api negotiate-checkpoint
 python -m soft_skills_lab evaluate leader-wrong update-recommendation
 ```
 
+Practice Chapter 23's contextual professional judgment:
+
+```bash
+python -m soft_skills_lab scenario production-timeout
+python -m soft_skills_lab compare production-timeout --at T2
+python -m soft_skills_lab compare production-timeout --at T3
+python -m soft_skills_lab judgment production-timeout --at T2
+python -m soft_skills_lab judgment production-timeout --at T3
+python -m soft_skills_lab judgment-options production-timeout --at T2
+python -m soft_skills_lab judgment-record production-timeout
+python -m soft_skills_lab evaluate manager-cosmetic-ship professional
+python -m soft_skills_lab evaluate manager-unsafe-ship professional
+python -m soft_skills_lab evaluate defensible-implementation professional
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -451,7 +466,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 20. **Written Professional Communication** (implemented)
 21. **Trust and Reputation** (implemented)
 22. **Leadership Without Authority** (implemented)
-23. Professional Judgment
+23. **Professional Judgment** (implemented)
 24. End-to-End Workplace Simulation
 
 Later chapters are a roadmap, not yet implemented.
