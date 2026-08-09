@@ -304,6 +304,21 @@ python -m soft_skills_lab incident payment-alert-false-alarm
 python -m soft_skills_lab incident-trust
 ```
 
+Practice Chapter 16's privacy-preserving work-impact communication:
+
+```bash
+python -m soft_skills_lab scenario personal-capacity
+python -m soft_skills_lab evaluate personal-capacity bounded-professional-disclosure
+python -m soft_skills_lab compare personal-capacity
+python -m soft_skills_lab boundary personal-capacity
+python -m soft_skills_lab work-impact personal-capacity
+python -m soft_skills_lab evaluate one-day-availability proactive-reschedule
+python -m soft_skills_lab evaluate high-risk-capacity reassign-safely
+python -m soft_skills_lab evaluate urgent-personal-absence minimal-handoff
+python -m soft_skills_lab evaluate recurring-capacity-impact durable-plan
+python -m soft_skills_lab personal-capacity-trust
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -324,7 +339,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 13. **Working With Business Stakeholders** (implemented)
 14. **Handling Ambiguous Requirements** (implemented)
 15. **Handling Mistakes and Incidents** (implemented)
-16. When Personal Problems Affect Work
+16. **When Personal Problems Affect Work** (implemented)
 17. Performance Feedback and PIPs
 18. Interview Communication
 19. Meetings and Presence

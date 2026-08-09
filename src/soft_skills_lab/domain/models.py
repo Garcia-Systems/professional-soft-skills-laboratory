@@ -144,6 +144,53 @@ class IncidentState(Enum):
     REVIEWED = "REVIEWED"
 
 
+class WorkCapacity(Enum):
+    """Actor-declared or scenario-authored work capacity, never a diagnosis."""
+
+    FULL = "FULL"
+    REDUCED = "REDUCED"
+    UNAVAILABLE = "UNAVAILABLE"
+    UNSAFE_FOR_HIGH_RISK_TASK = "UNSAFE_FOR_HIGH_RISK_TASK"
+
+
+class DisclosureBoundary(Enum):
+    """Educational information boundary; it does not encode law or policy."""
+
+    PRIVATE = "PRIVATE"
+    OPTIONAL_CONTEXT = "OPTIONAL_CONTEXT"
+    WORK_RELEVANT = "WORK_RELEVANT"
+    REQUIRED_FOR_REQUEST = "REQUIRED_FOR_REQUEST"
+
+
+@dataclass(frozen=True)
+class CommitmentRevision:
+    original_commitment: str
+    reason_category: str
+    new_commitment: str
+    affected_dependencies: tuple[str, ...]
+    owner_agreement: str | None
+    next_checkpoint: str
+
+
+@dataclass(frozen=True)
+class WorkImpactContext:
+    """Observable professional effects; deliberately excludes the private cause."""
+
+    actor: str
+    affected_commitment: str
+    observed_work_impact: tuple[str, ...]
+    impact_start: str
+    current_capacity: WorkCapacity
+    private_details: tuple[str, ...]
+    work_relevant_information: tuple[str, ...]
+    manager_visibility_needed: bool
+    requested_support: tuple[str, ...]
+    revised_commitment: CommitmentRevision | None
+    dependencies: tuple[str, ...]
+    follow_up_point: str | None
+    formal_support_note: str | None = None
+
+
 @dataclass(frozen=True)
 class RecoveryCheck:
     description: str
@@ -739,6 +786,7 @@ class WorkplaceScenario:
     requirement_context: RequirementContext | None = None
     incident: Incident | None = None
     incident_audiences: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    work_impact: WorkImpactContext | None = None
 
 
 @dataclass(frozen=True)
@@ -885,6 +933,15 @@ class ProfessionalResponse:
     creates_testable_acceptance_condition: bool = False
     updates_requirement_history: bool = False
     progresses_safely: bool = False
+    identifies_work_impact: bool = False
+    preserves_reasonable_privacy: bool = True
+    answers_legitimate_capacity_question: bool = False
+    requests_specific_support: bool = False
+    revises_commitment_explicitly: bool = False
+    updates_dependencies: bool = False
+    recognizes_task_safety: bool = False
+    addresses_recurring_pattern: bool = False
+    uses_formal_path_when_needed: bool = False
 
 
 @dataclass(frozen=True)
