@@ -25,6 +25,7 @@ from soft_skills_lab.scenarios.collaboration import TIMELINE as COLLABORATION_TI
 from soft_skills_lab.trust import COLLABORATION_EVENTS
 from soft_skills_lab.trust import STAKEHOLDER_EVENTS
 from soft_skills_lab.evaluation.judgment import evaluate_judgment_response
+from soft_skills_lab.capstone import get_simulation
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -149,7 +150,86 @@ def build_parser() -> argparse.ArgumentParser:
     judgment_options.add_argument("scenario_id"); judgment_options.add_argument("--at", default="T2")
     judgment_record = commands.add_parser("judgment-record", help="inspect a decision against facts known at the time")
     judgment_record.add_argument("scenario_id")
+    capstone = commands.add_parser("capstone", help="run the deterministic Volume I capstone")
+    capstone.add_argument("project_id")
+    capstone.add_argument("--launch-decision", choices=("monitor-and-launch", "delay-for-regression"), default="monitor-and-launch")
+    step = commands.add_parser("capstone-step", help="inspect capstone state through one simulated time")
+    step.add_argument("project_id"); step.add_argument("--at", required=True)
+    for name in ("capstone-evidence", "capstone-trust", "capstone-requirements", "capstone-decisions", "capstone-judgment"):
+        command = commands.add_parser(name, help=f"inspect {name.replace('capstone-', '')} trace")
+        command.add_argument("project_id")
+        command.add_argument("--launch-decision", choices=("monitor-and-launch", "delay-for-regression"), default="monitor-and-launch")
     return parser
+
+
+def _capstone_text(project_id: str, launch_decision: str) -> str:
+    simulation = get_simulation(project_id, launch_decision)
+    lines = [f"CAPSTONE — {simulation.project_id}", simulation.objective, f"Launch decision: {simulation.launch_decision}", ""]
+    lines += [f"{event.time:<6}{event.summary}" for event in simulation.events]
+    lines += ["", "PROJECT OUTCOME", f"{simulation.project_outcome} at {simulation.launch_time}", "", "Professional behavior and trust evidence remain separate from project outcome."]
+    return "\n".join(lines)
+
+
+def _capstone_step_text(project_id: str, at: str) -> str:
+    simulation = get_simulation(project_id); events = simulation.at(at); current = events[-1]
+    lines = [f"CAPSTONE STATE — {at}", current.state, "", "CURRENT EVENT", current.summary, "", "COMMITMENTS"]
+    lines += [f"- {c.owner}: {c.description} by T{c.expected_completion} (planned)" for c in simulation.commitments]
+    lines += ["", "KNOWN FACTS"] + [f"- {fact}" for event in events for fact in event.facts]
+    lines += ["", "RISKS"] + ([f"- {risk}" for event in events for risk in event.risks] or ["- None currently recorded."])
+    lines += ["", "OPEN DECISIONS"] + ([f"- {item}" for event in events for item in event.open_decisions] or ["- None currently recorded."])
+    visible = {eid for event in events for eid in event.evidence_ids}
+    lines += ["", "PROFESSIONAL EVIDENCE SO FAR"] + [f"- {e.time} {e.observable_behavior}" for e in simulation.trust_history.evidence if e.event_id in visible]
+    return "\n".join(lines)
+
+
+def _capstone_evidence_text(project_id: str) -> str:
+    history = get_simulation(project_id).trust_history
+    lines = ["PROFESSIONAL EVIDENCE"]
+    for polarity, heading in (("+", "POSITIVE"), ("-", "NEGATIVE")):
+        lines += ["", heading, ""]
+        for event in history.evidence:
+            if event.polarity.value == polarity: lines += [event.time, event.observable_behavior, ""]
+    lines += ["MIXED", "", "T16", "The missing validation was disclosed before approval, but only after the T14 shortcut."]
+    return "\n".join(lines)
+
+
+def _capstone_trust_text(project_id: str) -> str:
+    history = get_simulation(project_id).trust_history
+    lines = ["CAPSTONE TRUST HISTORY", f"Subject: {history.subject}", "No global score is calculated."]
+    for dimension, interpretation in history.interpretations.items():
+        lines += ["", dimension.value.replace("-", " ").upper(), interpretation.state.value, interpretation.why]
+        lines += [f"{e.polarity.value} {e.time}: {e.observable_behavior}" for e in history.for_dimension(dimension)]
+    return "\n".join(lines)
+
+
+def _capstone_requirements_text(project_id: str) -> str:
+    r = get_simulation(project_id).requirements
+    sections = (("AMBIGUOUS REQUEST", (r.request,)), ("PRODUCT DECISIONS", r.product_decisions),
+                ("ACCEPTANCE CONDITIONS", r.acceptance_conditions), ("IMPLEMENTATION CONTRACT", r.implementation_contract),
+                ("LAUNCH VERIFICATION", r.launch_verification))
+    lines = ["REQUIREMENT TRACE"]
+    for index, (heading, values) in enumerate(sections):
+        if index: lines += ["", "    ->"]
+        lines += ["", heading, *(f"- {value}" for value in values)]
+    return "\n".join(lines)
+
+
+def _capstone_decisions_text(project_id: str, launch_decision: str) -> str:
+    simulation = get_simulation(project_id, launch_decision); lines = ["DECISION TRACE"]
+    for decision in simulation.decisions:
+        lines += ["", f"{decision.time} — {decision.subject}", f"Owner: {decision.owner}", f"Decision: {decision.choice}", f"Rationale: {decision.rationale}"]
+    lines += ["", "DURABLE LAUNCH RECORD", f"Residual risk: {simulation.written_decision.residual_risk}", f"Monitoring: {simulation.written_decision.monitoring}", f"Support: {simulation.written_decision.member_support_readiness}"]
+    return "\n".join(lines)
+
+
+def _capstone_judgment_text(project_id: str, launch_decision: str) -> str:
+    get_simulation(project_id, launch_decision)
+    moments = (("T3", "Investigate before committing", "Unknown vendor behavior makes certainty unsafe."),
+               ("T5", "Disclose work impact, preserve privacy", "The dependency needs impact, not private cause."),
+               ("T10", "Defer through tradeoff", "Value is acknowledged while scope and timing stay explicit."),
+               ("T17", "Contain before root cause", "Reversible containment limits harm while evidence develops."),
+               ("T18.5", launch_decision, "Both timing choices are defensible because acceptance passes and uncertainty has a real delay-cost tradeoff."))
+    return "\n".join(["PROFESSIONAL JUDGMENT TRACE", "No option is numerically ranked.", *[f"\n{t} — {choice}\n{why}" for t, choice, why in moments]])
 
 
 def _scenario_text(scenario_id: str) -> str:
@@ -1340,6 +1420,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _judgment_options_text(args.scenario_id,args.at)
         elif args.command == "judgment-record":
             output = _judgment_record_text(args.scenario_id)
+        elif args.command == "capstone":
+            output = _capstone_text(args.project_id, args.launch_decision)
+        elif args.command == "capstone-step":
+            output = _capstone_step_text(args.project_id, args.at)
+        elif args.command == "capstone-evidence":
+            output = _capstone_evidence_text(args.project_id)
+        elif args.command == "capstone-trust":
+            output = _capstone_trust_text(args.project_id)
+        elif args.command == "capstone-requirements":
+            output = _capstone_requirements_text(args.project_id)
+        elif args.command == "capstone-decisions":
+            output = _capstone_decisions_text(args.project_id, args.launch_decision)
+        elif args.command == "capstone-judgment":
+            output = _capstone_judgment_text(args.project_id, args.launch_decision)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:
