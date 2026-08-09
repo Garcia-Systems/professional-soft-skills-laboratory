@@ -43,6 +43,48 @@ class UncertaintyKind(Enum):
     UNKNOWABLE_FROM_CURRENT_EVIDENCE = "unknowable-from-current-evidence"
 
 
+class FeedbackEvidenceStrength(Enum):
+    """An inspectable relationship between feedback and scenario evidence."""
+
+    DIRECT_OBSERVATION = "direct observation"
+    SPECIFIC_EXAMPLE = "specific example"
+    PATTERN_SUPPORTED = "pattern supported"
+    GENERALIZATION_UNSUPPORTED = "generalization unsupported"
+
+
+@dataclass(frozen=True)
+class FeedbackEvidence:
+    statement: str
+    strength: FeedbackEvidenceStrength
+
+
+@dataclass(frozen=True)
+class BehavioralActionPlan:
+    """A future observable rule, distinct from a verbal promise."""
+
+    owner: str
+    trigger: str
+    behavior: str
+    follow_up: str | None = None
+
+
+@dataclass(frozen=True)
+class ProfessionalFeedback:
+    """Scenario-authored decomposition; it does not parse arbitrary prose."""
+
+    source: str
+    subject: str
+    claim: str
+    examples: tuple[str, ...]
+    observed_behavior: tuple[str, ...]
+    interpretation: tuple[str, ...]
+    expected_behavior: tuple[str, ...]
+    requested_change: tuple[str, ...]
+    evidence: tuple[FeedbackEvidence, ...]
+    important_context: tuple[str, ...] = ()
+    not_implied: tuple[str, ...] = ()
+
+
 @dataclass(frozen=True)
 class Hypothesis:
     """A possible explanation, explicitly distinct from an established fact."""
@@ -272,6 +314,8 @@ class WorkplaceScenario:
     question_context: QuestionContext | None = None
     explanation_context: ExplanationContext | None = None
     evidence_context: EvidenceContext | None = None
+    feedback: ProfessionalFeedback | None = None
+    action_plan: BehavioralActionPlan | None = None
 
 
 @dataclass(frozen=True)
@@ -329,6 +373,16 @@ class ProfessionalResponse:
     uncertainty_next_action: str | None = None
     decision_impact: str | None = None
     estimate_for: str | None = None
+    acknowledges_feedback: bool = False
+    seeks_specific_understanding: bool = False
+    acknowledges_supported_evidence: bool = False
+    premature_rebuttal: bool = False
+    automatic_agreement: bool = False
+    context_provided: bool = False
+    context_used_as_excuse: bool = False
+    identifies_behavior_change: bool = False
+    preserves_respectful_disagreement: bool = False
+    demonstrated_improvement: bool = False
 
 
 @dataclass(frozen=True)

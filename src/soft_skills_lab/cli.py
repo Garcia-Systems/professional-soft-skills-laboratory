@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -13,6 +13,8 @@ from soft_skills_lab.scenarios.status_updates import INTEGRATION_TIMELINE, PRIMA
 from soft_skills_lab.scenarios.uncertainty import PROFILE_RESPONSES
 from soft_skills_lab.evaluation.uncertainty import CRITERIA as UNCERTAINTY_CRITERIA
 from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
+from soft_skills_lab.scenarios.feedback import PRIMARY_RESPONSE_IDS as FEEDBACK_RESPONSE_IDS
+from soft_skills_lab.trust import FEEDBACK_IMPROVEMENT_EVENTS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -44,6 +46,10 @@ def build_parser() -> argparse.ArgumentParser:
     evidence.add_argument("scenario_id")
     uncertainty = commands.add_parser("uncertainty", help="inspect authored current knowledge and next evidence")
     uncertainty.add_argument("scenario_id")
+    feedback = commands.add_parser("feedback", help="inspect authored feedback layers and evidence")
+    feedback.add_argument("scenario_id")
+    improvement = commands.add_parser("improvement", help="inspect later observable feedback follow-through")
+    improvement.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     return parser
 
@@ -73,7 +79,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.evidence_context is not None:
+    if scenario.feedback is not None or scenario_id == "feedback-follow-up":
+        results = evaluate_feedback_response(scenario, response)
+    elif scenario.evidence_context is not None:
         results = evaluate_uncertainty_response(scenario, response)
     elif scenario_id in ("integration-delivery", "credential-blocker", "verification-completion"):
         results = evaluate_status_response(scenario, response)
@@ -102,6 +110,16 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "project-visibility":
+        headings = ("UNDERSTANDS", "OWNERSHIP", "EVIDENCE", "NO-BLAME", "ACTION")
+        ids = ("acknowledges-feedback", "separates-context-from-excuse", "acknowledges-supported-evidence", "avoids-blame", "identifies-behavior-change")
+        lines = [f"{'PATH':23} " + " ".join(f"{item:12}" for item in headings)]
+        scenario = get_scenario(scenario_id)
+        for response_id in FEEDBACK_RESPONSE_IDS:
+            results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_feedback_response(scenario, get_response(scenario_id, response_id))}
+            lines.append(f"{response_id:23} " + " ".join(f"{results[item]:12}" for item in ids))
+        lines.append("\nDimensions describe observable reception; they are not a personality or professionalism score.")
+        return "\n".join(lines)
     if scenario_id == "profile-update-failure":
         headings = ("EXPLICIT", "EVIDENCE", "HYPOTHESIS", "BASIS", "MISSING", "ACTION", "FOLLOW-UP", "IMPACT")
         ids = tuple(item.criterion_id for item in UNCERTAINTY_CRITERIA[:8])
@@ -293,6 +311,35 @@ def _uncertainty_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
+def _feedback_text(scenario_id: str) -> str:
+    feedback = get_scenario(scenario_id).feedback
+    if feedback is None:
+        raise KeyError(f"feedback inspection unavailable for scenario: {scenario_id}")
+    lines = ["FEEDBACK", "", "Claim:", feedback.claim, "", "OBSERVED EVIDENCE"]
+    lines.extend(f"- {item}" for item in feedback.observed_behavior)
+    for heading, items in (("INTERPRETATION", feedback.interpretation), ("EXPECTATION", feedback.expected_behavior),
+                           ("REQUESTED CHANGE", feedback.requested_change), ("IMPORTANT CONTEXT", feedback.important_context),
+                           ("NOT IMPLIED", feedback.not_implied)):
+        lines.extend(("", heading))
+        lines.extend(f"- {item}" for item in items)
+    lines.extend(("", "EVIDENCE STATUS"))
+    lines.extend(f"- {item.strength.name}: {item.statement}" for item in feedback.evidence)
+    return "\n".join(lines)
+
+
+def _improvement_text(scenario_id: str) -> str:
+    if scenario_id != "feedback-follow-up":
+        raise KeyError(f"improvement history unavailable for scenario: {scenario_id}")
+    trust = ProfessionalTrust()
+    lines = ["FEEDBACK FOLLOW-UP", "", "Observable evidence:"]
+    for event in FEEDBACK_IMPROVEMENT_EVENTS:
+        trust = trust.record(event)
+        lines.append(f"- {event.kind.label}: {event.detail}")
+    lines.extend(("", "Verbal agreement alone is not demonstrated improvement.",
+                  "The later risk update and completed follow-up are evidence of changed behavior."))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -318,6 +365,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _evidence_text(args.scenario_id)
         elif args.command == "uncertainty":
             output = _uncertainty_text(args.scenario_id)
+        elif args.command == "feedback":
+            output = _feedback_text(args.scenario_id)
+        elif args.command == "improvement":
+            output = _improvement_text(args.scenario_id)
         else:
             output = _trust_text()
     except KeyError as error:
