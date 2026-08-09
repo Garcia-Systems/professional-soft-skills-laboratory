@@ -388,7 +388,108 @@ class DecisionRelevance(Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+    BLOCKING = "blocking"
     RESOLVED = "resolved"
+
+
+class RequirementIssueKind(Enum):
+    """Authored requirement defects; these labels are not inferred from prose."""
+
+    VAGUE = "vague"
+    AMBIGUOUS = "ambiguous"
+    INCOMPLETE = "incomplete"
+    CONTRADICTORY = "contradictory"
+    UNKNOWN = "unknown"
+
+
+class ResolutionSource(Enum):
+    EXISTING_CONTRACT = "existing contract"
+    STAKEHOLDER_DECISION = "stakeholder decision"
+    PRODUCT_DECISION = "product decision"
+    ENGINEERING_CONSTRAINT = "engineering constraint"
+    POLICY = "policy"
+    ESTABLISHED_CONVENTION = "established convention"
+    EXPERIMENT = "experiment"
+
+
+class AssumptionStatus(Enum):
+    OPEN = "open"
+    VALIDATED = "validated"
+    REPLACED = "replaced"
+
+
+@dataclass(frozen=True)
+class RequirementAmbiguity:
+    subject: str
+    description: str
+    kind: RequirementIssueKind
+    decision_impact: DecisionRelevance
+    evidence: tuple[str, ...]
+    possible_interpretations: tuple[str, ...]
+    safe_to_defer: bool
+    resolution_source: ResolutionSource | None = None
+    resolution: str | None = None
+
+    @property
+    def is_resolved(self) -> bool:
+        return self.resolution is not None
+
+
+@dataclass(frozen=True)
+class RequirementContradiction:
+    subject: str
+    sources: tuple[tuple[str, str], ...]
+    interpretation: str
+    resolution: str | None = None
+    resolution_source: ResolutionSource | None = None
+
+
+@dataclass(frozen=True)
+class AssumptionRecord:
+    assumption: str
+    reason: str
+    impact: str
+    owner: str
+    reversible: bool
+    validation_point: str
+    status: AssumptionStatus = AssumptionStatus.OPEN
+    safe_default: bool = False
+
+
+@dataclass(frozen=True)
+class AcceptanceCondition:
+    """An observable contract outcome, deliberately not an implementation recipe."""
+
+    condition_id: str
+    statement: str
+    verification: str
+
+
+@dataclass(frozen=True, order=True)
+class RequirementHistoryEvent:
+    point: int
+    description: str
+    source: ResolutionSource | None = None
+
+
+@dataclass(frozen=True)
+class RequirementContext:
+    """Small scenario-authored ambiguity view extending the shared behavior model."""
+
+    requirement_id: str
+    stated_request: str
+    business_outcome: str
+    explicit_requirements: tuple[str, ...]
+    constraints: tuple[str, ...]
+    ambiguities: tuple[RequirementAmbiguity, ...]
+    contradictions: tuple[RequirementContradiction, ...] = ()
+    defaults: tuple[str, ...] = ()
+    assumptions: tuple[AssumptionRecord, ...] = ()
+    decisions: tuple[str, ...] = ()
+    acceptance_conditions: tuple[AcceptanceCondition, ...] = ()
+    evidence_sources: tuple[str, ...] = ()
+    history: tuple[RequirementHistoryEvent, ...] = ()
+    safe_work_while_open: tuple[str, ...] = ()
 
 
 class InformationSource(Enum):
@@ -559,6 +660,7 @@ class WorkplaceScenario:
     stakeholder_request: StakeholderRequest | None = None
     tradeoff_options: tuple[TradeoffOption, ...] = ()
     scope_change: ScopeChange | None = None
+    requirement_context: RequirementContext | None = None
 
 
 @dataclass(frozen=True)
@@ -686,6 +788,16 @@ class ProfessionalResponse:
     aligns_commitment_with_decision: bool = False
     preserves_business_context: bool = False
     technical_risk_made_visible: bool = False
+    identifies_material_ambiguity: bool = False
+    distinguishes_low_value_detail: bool = False
+    surfaces_contradiction: bool = False
+    uses_existing_evidence: bool = False
+    records_visible_assumption: bool = False
+    uses_safe_default: bool = False
+    requires_material_decision: bool = False
+    creates_testable_acceptance_condition: bool = False
+    updates_requirement_history: bool = False
+    progresses_safely: bool = False
 
 
 @dataclass(frozen=True)

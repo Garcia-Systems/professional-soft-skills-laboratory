@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -84,6 +84,14 @@ def build_parser() -> argparse.ArgumentParser:
     scope_change = commands.add_parser("scope-change", help="inspect a material stakeholder scope request")
     scope_change.add_argument("scenario_id")
     commands.add_parser("stakeholder-trust", help="show stakeholder collaboration trust evidence")
+    ambiguities = commands.add_parser("ambiguities", help="inspect authored requirement ambiguity and relevance")
+    ambiguities.add_argument("scenario_id")
+    contradictions = commands.add_parser("contradictions", help="inspect authored contradictory requirement evidence")
+    contradictions.add_argument("scenario_id")
+    acceptance = commands.add_parser("acceptance", help="inspect finalized observable acceptance conditions")
+    acceptance.add_argument("scenario_id")
+    requirement_history = commands.add_parser("requirement-history", help="inspect incremental requirement decisions")
+    requirement_history.add_argument("scenario_id")
     return parser
 
 
@@ -109,6 +117,10 @@ def _scenario_text(scenario_id: str) -> str:
     elif scenario_id == "verification-integration":
         lines.append("\nTimeline:")
         lines.extend(f"- T{event.point}: {event.description}" for event in COLLABORATION_TIMELINE)
+    if scenario.requirement_context is not None:
+        lines.extend(("\nRequirement:", scenario.requirement_context.stated_request, "\nBusiness outcome:",
+                      scenario.requirement_context.business_outcome, "\nRequirement history:"))
+        lines.extend(f"- T{event.point} {event.description}" for event in scenario.requirement_context.history)
     lines.append("\nReference responses:")
     lines.extend(f"- {response.response_id}: {response.label}" for response in list_responses(scenario_id))
     return "\n".join(lines)
@@ -118,7 +130,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.stakeholder_request is not None:
+    if scenario.requirement_context is not None:
+        results = evaluate_requirement_response(scenario, response)
+    elif scenario.stakeholder_request is not None:
         results = evaluate_stakeholder_response(scenario, response)
     elif scenario.peer_collaboration is not None:
         results = evaluate_collaboration_response(scenario, response)
@@ -161,6 +175,21 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "transaction-export":
+        headings = ("MATERIAL", "EVIDENCE", "ASSUMPTIONS", "DECISIONS", "ACCEPTANCE")
+        dimensions = {
+            "assume-everything": ("FAIL", "PARTIAL", "FAIL", "FAIL", "FAIL"),
+            "literal-minimum": ("FAIL", "FAIL", "FAIL", "FAIL", "PARTIAL"),
+            "block-on-everything": ("PARTIAL", "PARTIAL", "PASS", "FAIL", "FAIL"),
+            "contradictory-pick": ("FAIL", "FAIL", "FAIL", "FAIL", "PARTIAL"),
+            "assumption-as-fact": ("FAIL", "FAIL", "FAIL", "FAIL", "FAIL"),
+            "resolve-decision-relevant-ambiguity": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+            "progressive-clarification": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':40} " + " ".join(f"{item:13}" for item in headings)]
+        lines.extend(f"{path:40} " + " ".join(f"{item:13}" for item in values) for path, values in dimensions.items())
+        lines.append("\nDimensions remain separate; more questions do not produce an ambiguity-management score.")
+        return "\n".join(lines)
     if scenario_id == "reporting-export":
         headings = ("OUTCOME", "CONTEXT", "TRADEOFF", "SCOPE", "RECOMMENDATION")
         dimensions = {
@@ -684,6 +713,68 @@ def _stakeholder_trust_text() -> str:
     return "\n".join(lines)
 
 
+def _requirement_context(scenario_id: str):
+    context = get_scenario(scenario_id).requirement_context
+    if context is None:
+        raise KeyError(f"requirement inspection unavailable for scenario: {scenario_id}")
+    return context
+
+
+def _ambiguities_text(scenario_id: str) -> str:
+    context = _requirement_context(scenario_id)
+    resolved = tuple(item for item in context.ambiguities if item.is_resolved)
+    unresolved = tuple(item for item in context.ambiguities if not item.is_resolved and not item.safe_to_defer)
+    deferred = tuple(item for item in context.ambiguities if item.safe_to_defer and not item.is_resolved)
+    lines = ["REQUIREMENT", context.stated_request, "", "RESOLVED BY EXISTING EVIDENCE"]
+    for item in resolved:
+        source = item.resolution_source.value if item.resolution_source else "authored evidence"
+        lines.extend(("", f"{item.subject} [{item.kind.value}; {item.decision_impact.value}; {source}]", item.resolution or ""))
+    lines.extend(("", "UNRESOLVED HIGH-VALUE DECISIONS"))
+    for item in unresolved:
+        lines.extend(("", f"{item.subject} [{item.kind.value}; {item.decision_impact.value}]",
+                      *(f"- {value}" for value in item.possible_interpretations)))
+    lines.extend(("", "LOW-VALUE / NON-BLOCKING DETAILS"))
+    lines.extend(f"- {item.subject}: {item.description}" for item in deferred)
+    if context.safe_work_while_open:
+        lines.extend(("", "SAFE WORK WHILE DECISIONS REMAIN OPEN", *(f"- {item}" for item in context.safe_work_while_open)))
+    return "\n".join(lines)
+
+
+def _contradictions_text(scenario_id: str) -> str:
+    context = _requirement_context(scenario_id)
+    if not context.contradictions:
+        return "NO AUTHORED CONTRADICTIONS\nOpen ambiguity may still require a decision."
+    lines: list[str] = []
+    for conflict in context.contradictions:
+        lines.extend(("POTENTIAL CONFLICT", "", conflict.subject))
+        for source, statement in conflict.sources:
+            lines.extend(("", f"{source}:", f'"{statement}"'))
+        lines.extend(("", "INTERPRETATION", conflict.interpretation, "", "RESOLUTION",
+                      conflict.resolution or "Not resolved; surface it to the decision owner.", ""))
+    return "\n".join(lines).rstrip()
+
+
+def _acceptance_text(scenario_id: str) -> str:
+    conditions = _requirement_context(scenario_id).acceptance_conditions
+    lines = ["ACCEPTANCE CONDITIONS"]
+    if not conditions:
+        lines.append("No acceptance conditions have been finalized.")
+    for number, item in enumerate(conditions, 1):
+        lines.extend(("", f"{number}. {item.statement}", f"   Verify: {item.verification}"))
+    return "\n".join(lines)
+
+
+def _requirement_history_text(scenario_id: str) -> str:
+    context = _requirement_context(scenario_id)
+    lines = ["REQUIREMENT DECISION HISTORY"]
+    lines.extend(f"T{item.point} {item.description}" + (f" [{item.source.value}]" if item.source else "") for item in context.history)
+    lines.extend(("", "Visible assumptions:"))
+    lines.extend(f"- {item.assumption} ({item.status.value}; reversible={str(item.reversible).lower()})" for item in context.assumptions)
+    if not context.assumptions:
+        lines.append("- None")
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -741,6 +832,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _scope_change_text(args.scenario_id)
         elif args.command == "stakeholder-trust":
             output = _stakeholder_trust_text()
+        elif args.command == "ambiguities":
+            output = _ambiguities_text(args.scenario_id)
+        elif args.command == "contradictions":
+            output = _contradictions_text(args.scenario_id)
+        elif args.command == "acceptance":
+            output = _acceptance_text(args.scenario_id)
+        elif args.command == "requirement-history":
+            output = _requirement_history_text(args.scenario_id)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

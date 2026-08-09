@@ -269,6 +269,26 @@ python -m soft_skills_lab evaluate impossible-export-constraints surface-conflic
 python -m soft_skills_lab stakeholder-trust
 ```
 
+Practice Chapter 14's focused ambiguity reduction and explicit acceptance contracts:
+
+```bash
+python -m soft_skills_lab scenario transaction-export
+python -m soft_skills_lab evaluate transaction-export assume-everything
+python -m soft_skills_lab evaluate transaction-export block-on-everything
+python -m soft_skills_lab evaluate transaction-export resolve-decision-relevant-ambiguity
+python -m soft_skills_lab evaluate transaction-export progressive-clarification
+python -m soft_skills_lab compare transaction-export
+python -m soft_skills_lab ambiguities transaction-export
+python -m soft_skills_lab contradictions transaction-export
+python -m soft_skills_lab acceptance transaction-export
+python -m soft_skills_lab requirement-history transaction-export
+python -m soft_skills_lab ambiguities verification-notification
+python -m soft_skills_lab scenario contradictory-export-stakeholders
+python -m soft_skills_lab scenario verification-retry
+python -m soft_skills_lab scenario download-button-default
+python -m soft_skills_lab scenario pending-requirement-change
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -287,7 +307,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 11. **Working With Managers** (implemented)
 12. **Working With Teammates** (implemented)
 13. **Working With Business Stakeholders** (implemented)
-14. Handling Ambiguous Requirements
+14. **Handling Ambiguous Requirements** (implemented)
 15. Handling Mistakes and Incidents
 16. When Personal Problems Affect Work
 17. Performance Feedback and PIPs
