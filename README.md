@@ -150,6 +150,25 @@ python -m soft_skills_lab evaluate feedback-follow-up demonstrated-change
 python -m soft_skills_lab improvement feedback-follow-up
 ```
 
+Practice Chapter 8's evidence-based responsibility boundaries and follow-through:
+
+```bash
+python -m soft_skills_lab scenario skipped-validation
+python -m soft_skills_lab evaluate skipped-validation deny
+python -m soft_skills_lab evaluate skipped-validation blame-process
+python -m soft_skills_lab evaluate skipped-validation excuse-pressure
+python -m soft_skills_lab evaluate skipped-validation over-own
+python -m soft_skills_lab evaluate skipped-validation empty-apology
+python -m soft_skills_lab evaluate skipped-validation explanation-without-ownership
+python -m soft_skills_lab evaluate skipped-validation accurate-ownership
+python -m soft_skills_lab compare skipped-validation
+python -m soft_skills_lab responsibility skipped-validation
+python -m soft_skills_lab evaluate missed-handoff own-and-recover
+python -m soft_skills_lab evaluate shared-responsibility bounded-ownership
+python -m soft_skills_lab evaluate unavoidable-outcome evidence-bounded
+python -m soft_skills_lab learning responsibility-follow-up
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -162,7 +181,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 5. **Giving Status Updates** (implemented)
 6. **Saying “I Don’t Know” Professionally** (implemented)
 7. **Receiving Feedback Without Defensiveness** (implemented)
-8. Taking Responsibility
+8. **Taking Responsibility** (implemented)
 9. Disagreeing Professionally
 10. Conflict and De-escalation
 11. Working With Managers

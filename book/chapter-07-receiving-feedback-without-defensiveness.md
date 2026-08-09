@@ -158,4 +158,4 @@ python -m soft_skills_lab improvement feedback-follow-up
 
 ## Model limits
 
-All meanings are authored explicitly; the laboratory does not parse arbitrary feedback, call an AI API, perform sentiment analysis, infer personality, or score emotional state. It evaluates reference behaviors criterion by criterion rather than producing a professionalism percentage. Power, culture, safety, law, and organizational policy may require responses outside these compact deterministic scenarios. Chapter 8 responsibility mechanisms and Chapter 9's broader disagreement treatment remain intentionally deferred.
+All meanings are authored explicitly; the laboratory does not parse arbitrary feedback, call an AI API, perform sentiment analysis, infer personality, or score emotional state. It evaluates reference behaviors criterion by criterion rather than producing a professionalism percentage. Power, culture, safety, law, and organizational policy may require responses outside these compact deterministic scenarios. Chapter 8 extends these evidence and follow-through ideas into responsibility; Chapter 9's broader disagreement treatment remains intentionally deferred.

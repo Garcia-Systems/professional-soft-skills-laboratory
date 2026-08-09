@@ -19,6 +19,12 @@ class TrustEventKind(Enum):
     CORRECTIVE_ACTION_TAKEN = (1, "Corrective action taken")
     FEEDBACK_RECEIVED = (0, "Feedback received")
     CHANGED_BEHAVIOR_DEMONSTRATED = (2, "Changed behavior demonstrated")
+    RESPONSIBILITY_ACKNOWLEDGED = (1, "Responsibility acknowledged")
+    PREVENTIVE_ACTION_COMPLETED = (2, "Preventive action completed")
+    IMPACTED_PARTY_FOLLOWED_UP = (2, "Impacted party followed up")
+    BLAME_SHIFTED = (-1, "Blame shifted")
+    KNOWN_RESPONSIBILITY_DENIED = (-2, "Known responsibility denied")
+    SAME_AVOIDABLE_FAILURE_REPEATED = (-3, "Same avoidable failure repeated")
 
     @property
     def weight(self) -> int:
@@ -60,4 +66,12 @@ FEEDBACK_IMPROVEMENT_EVENTS = (
     TrustEvent(TrustEventKind.EXPECTATION_CLARIFIED, "Alex and Morgan clarified the early-risk update expectation."),
     TrustEvent(TrustEventKind.RISK_COMMUNICATED_EARLY, "Alex reported the next material risk when discovered at T2."),
     TrustEvent(TrustEventKind.CHANGED_BEHAVIOR_DEMONSTRATED, "Alex named the dependency at T2 and followed up at T3."),
+)
+
+RESPONSIBILITY_LEARNING_EVENTS = (
+    TrustEvent(TrustEventKind.RESPONSIBILITY_ACKNOWLEDGED, "Alex acknowledged skipping required staging validation."),
+    TrustEvent(TrustEventKind.CORRECTIVE_ACTION_TAKEN, "The endpoint was corrected and validated before redeployment."),
+    TrustEvent(TrustEventKind.PREVENTIVE_ACTION_COMPLETED, "Staging validation became a deployment gate."),
+    TrustEvent(TrustEventKind.CHANGED_BEHAVIOR_DEMONSTRATED, "Alex ran the gate and stopped a later invalid endpoint before production."),
+    TrustEvent(TrustEventKind.IMPACTED_PARTY_FOLLOWED_UP, "Alex reported the stopped deployment and closed the incident follow-up."),
 )

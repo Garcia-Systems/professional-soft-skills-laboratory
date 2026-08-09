@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -15,6 +15,8 @@ from soft_skills_lab.evaluation.uncertainty import CRITERIA as UNCERTAINTY_CRITE
 from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
 from soft_skills_lab.scenarios.feedback import PRIMARY_RESPONSE_IDS as FEEDBACK_RESPONSE_IDS
 from soft_skills_lab.trust import FEEDBACK_IMPROVEMENT_EVENTS
+from soft_skills_lab.scenarios.responsibility import PRIMARY_RESPONSE_IDS as RESPONSIBILITY_RESPONSE_IDS
+from soft_skills_lab.trust import RESPONSIBILITY_LEARNING_EVENTS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -50,6 +52,10 @@ def build_parser() -> argparse.ArgumentParser:
     feedback.add_argument("scenario_id")
     improvement = commands.add_parser("improvement", help="inspect later observable feedback follow-through")
     improvement.add_argument("scenario_id")
+    responsibility = commands.add_parser("responsibility", help="inspect evidence-based responsibility boundaries")
+    responsibility.add_argument("scenario_id")
+    learning = commands.add_parser("learning", help="inspect later observable responsibility follow-through")
+    learning.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     return parser
 
@@ -79,7 +85,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.feedback is not None or scenario_id == "feedback-follow-up":
+    if scenario.responsibility_map is not None or scenario_id == "responsibility-follow-up":
+        results = evaluate_responsibility_response(scenario, response)
+    elif scenario.feedback is not None or scenario_id == "feedback-follow-up":
         results = evaluate_feedback_response(scenario, response)
     elif scenario.evidence_context is not None:
         results = evaluate_uncertainty_response(scenario, response)
@@ -110,6 +118,19 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "skipped-validation":
+        headings = ("OWN PART", "NO BLAME", "CONTEXT", "IMPACT", "ACTION")
+        ids = ("identifies-own-contribution", "does-not-shift-blame",
+               "uses-context-without-erasing-responsibility", "acknowledges-impact",
+               "identifies-corrective-action")
+        lines = [f"{'PATH':31} " + " ".join(f"{item:11}" for item in headings)]
+        scenario = get_scenario(scenario_id)
+        for response_id in RESPONSIBILITY_RESPONSE_IDS:
+            results = {item.criterion.criterion_id: item.outcome.value for item in
+                       evaluate_responsibility_response(scenario, get_response(scenario_id, response_id))}
+            lines.append(f"{response_id:31} " + " ".join(f"{results[item]:11}" for item in ids))
+        lines.append("\nDimensions preserve responsibility boundaries; they are not an accountability percentage.")
+        return "\n".join(lines)
     if scenario_id == "project-visibility":
         headings = ("UNDERSTANDS", "OWNERSHIP", "EVIDENCE", "NO-BLAME", "ACTION")
         ids = ("acknowledges-feedback", "separates-context-from-excuse", "acknowledges-supported-evidence", "avoids-blame", "identifies-behavior-change")
@@ -340,6 +361,44 @@ def _improvement_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
+def _responsibility_text(scenario_id: str) -> str:
+    responsibility = get_scenario(scenario_id).responsibility_map
+    if responsibility is None:
+        raise KeyError(f"responsibility inspection unavailable for scenario: {scenario_id}")
+    lines = ["INCIDENT", responsibility.incident]
+    for boundary in responsibility.boundaries:
+        lines.extend(("", f"{boundary.actor.upper()}'S CONTRIBUTION"))
+        lines.extend(f"- {item}" for item in boundary.contribution)
+        if boundary.controlled:
+            lines.append("Controlled:")
+            lines.extend(f"- {item}" for item in boundary.controlled)
+        if boundary.did_not_control:
+            lines.append("Did not control:")
+            lines.extend(f"- {item}" for item in boundary.did_not_control)
+    for heading, items in (("EVIDENCE", responsibility.evidence), ("CONTEXT", responsibility.process_conditions),
+                           ("EXTERNAL FACTORS", responsibility.external_factors), ("INCIDENT RESULT", responsibility.results),
+                           ("NOT SUPPORTED", responsibility.not_supported),
+                           ("IMMEDIATE RESPONSIBILITY", responsibility.immediate_responsibility),
+                           ("PREVENTIVE ACTION", responsibility.preventive_action)):
+        if items:
+            lines.extend(("", heading, *(f"- {item}" for item in items)))
+    lines.extend(("", "This educational decomposition is not legal-liability analysis."))
+    return "\n".join(lines)
+
+
+def _learning_text(scenario_id: str) -> str:
+    if scenario_id != "responsibility-follow-up":
+        raise KeyError(f"responsibility learning unavailable for scenario: {scenario_id}")
+    trust = ProfessionalTrust()
+    lines = ["RESPONSIBILITY FOLLOW-UP", "", "Observable trust evidence:"]
+    for event in RESPONSIBILITY_LEARNING_EVENTS:
+        trust = trust.record(event)
+        lines.append(f"- {event.kind.label}: {event.detail}")
+    lines.extend(("", "Verbal ownership alone is not demonstrated learning.",
+                  "Accountability becomes credible when corrective behavior is visible later."))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -369,6 +428,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _feedback_text(args.scenario_id)
         elif args.command == "improvement":
             output = _improvement_text(args.scenario_id)
+        elif args.command == "responsibility":
+            output = _responsibility_text(args.scenario_id)
+        elif args.command == "learning":
+            output = _learning_text(args.scenario_id)
         else:
             output = _trust_text()
     except KeyError as error:
