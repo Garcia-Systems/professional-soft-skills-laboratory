@@ -122,6 +122,71 @@ class VisibilityThreshold(Enum):
     ESCALATE = "ESCALATE"
 
 
+class HandoffState(Enum):
+    """Observable handoff milestones; artifact creation is deliberately not delivery."""
+
+    PREPARING = "PREPARING"
+    READY = "READY"
+    DELIVERED = "DELIVERED"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    ACCEPTED = "ACCEPTED"
+    REWORK_REQUIRED = "REWORK REQUIRED"
+
+
+@dataclass(frozen=True)
+class Handoff:
+    handoff_id: str
+    title: str
+    sender: str
+    receiver: str
+    artifact: str
+    dependency_served: str
+    agreed_contract: tuple[str, ...]
+    state: HandoffState
+    required_context: tuple[str, ...]
+    acceptance_condition: str
+    open_questions: tuple[str, ...] = ()
+
+    def transition(self, state: HandoffState) -> "Handoff":
+        allowed = {
+            HandoffState.PREPARING: {HandoffState.READY},
+            HandoffState.READY: {HandoffState.DELIVERED},
+            HandoffState.DELIVERED: {HandoffState.ACKNOWLEDGED, HandoffState.REWORK_REQUIRED},
+            HandoffState.ACKNOWLEDGED: {HandoffState.ACCEPTED, HandoffState.REWORK_REQUIRED},
+            HandoffState.REWORK_REQUIRED: {HandoffState.READY},
+            HandoffState.ACCEPTED: set(),
+        }
+        if state not in allowed[self.state]:
+            raise ValueError(f"invalid handoff transition: {self.state.value} -> {state.value}")
+        from dataclasses import replace
+        return replace(self, state=state)
+
+
+@dataclass(frozen=True)
+class PeerOwnership:
+    owners: tuple[tuple[str, tuple[str, ...]], ...]
+    shared: tuple[str, ...]
+    not_implied: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class HelpContext:
+    helper_commitment_risk: RiskLevel
+    request_urgency: RiskLevel
+    requester_blocked: bool
+    alternative_sources: tuple[str, ...]
+    expected_duration: str
+
+
+@dataclass(frozen=True)
+class PeerCollaboration:
+    shared_objective: str
+    ownership: PeerOwnership
+    dependencies: tuple[str, ...]
+    handoff: Handoff | None = None
+    help_context: HelpContext | None = None
+
+
 @dataclass(frozen=True)
 class ManagerExpectation:
     subject: str
@@ -449,6 +514,7 @@ class WorkplaceScenario:
     decision_context: DecisionContext | None = None
     conflict_state: ConflictState | None = None
     working_agreement: WorkingAgreement | None = None
+    peer_collaboration: PeerCollaboration | None = None
 
 
 @dataclass(frozen=True)
@@ -558,6 +624,15 @@ class ProfessionalResponse:
     recommendation_provided: bool = False
     manager_signal_preserved: bool = False
     working_agreement_clarified: bool = False
+    handoff_explicit: bool = False
+    handoff_context_provided: bool = False
+    handoff_acknowledgement_sought: bool = False
+    respects_peer_ownership: bool = True
+    helps_without_taking_over: bool = False
+    accounts_for_help_opportunity_cost: bool = False
+    shared_ownership_clarified: bool = False
+    peer_dependency_addressed_directly: bool = False
+    contribution_recognized: bool = False
 
 
 @dataclass(frozen=True)

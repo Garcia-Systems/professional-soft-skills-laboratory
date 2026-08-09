@@ -223,6 +223,29 @@ python -m soft_skills_lab evaluate manager-one-on-one prepared-topics
 python -m soft_skills_lab manager-trust
 ```
 
+Practice Chapter 12's explicit peer ownership, handoffs, review, and bounded help:
+
+```bash
+python -m soft_skills_lab scenario verification-integration
+python -m soft_skills_lab evaluate verification-integration silent-handoff
+python -m soft_skills_lab evaluate verification-integration throw-over-wall
+python -m soft_skills_lab evaluate verification-integration over-help
+python -m soft_skills_lab evaluate verification-integration wait-for-them-to-ask
+python -m soft_skills_lab evaluate verification-integration dependency-blame
+python -m soft_skills_lab evaluate verification-integration coordinated-handoff
+python -m soft_skills_lab evaluate verification-integration coordinated-help
+python -m soft_skills_lab compare verification-integration
+python -m soft_skills_lab handoff verification-integration
+python -m soft_skills_lab ownership verification-integration
+python -m soft_skills_lab evaluate peer-code-review useful-review
+python -m soft_skills_lab evaluate teammate-context targeted-context
+python -m soft_skills_lab evaluate bounded-peer-help bounded-help
+python -m soft_skills_lab evaluate shared-peer-task assign-owner
+python -m soft_skills_lab evaluate missed-peer-commitment peer-check
+python -m soft_skills_lab evaluate team-contribution accurate-credit
+python -m soft_skills_lab collaboration-trust
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -239,7 +262,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 9. **Disagreeing Professionally** (implemented)
 10. **Conflict and De-escalation** (implemented)
 11. **Working With Managers** (implemented)
-12. Working With Teammates
+12. **Working With Teammates** (implemented)
 13. Working With Business Stakeholders
 14. Handling Ambiguous Requirements
 15. Handling Mistakes and Incidents

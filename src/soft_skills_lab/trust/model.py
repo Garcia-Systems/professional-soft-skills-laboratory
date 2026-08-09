@@ -49,6 +49,9 @@ class TrustEventKind(Enum):
     CONSULTATION_BOUNDARY_BYPASSED = (-2, "Consultation boundary bypassed")
     BLOCKER_HIDDEN = (-3, "Blocker hidden")
     UNSTRUCTURED_STATUS_NOISE = (-1, "Repeated unstructured status noise")
+    HANDOFF_ACCEPTED = (2, "Handoff accepted")
+    PEER_OWNERSHIP_RESPECTED = (1, "Peer ownership respected")
+    DEPENDENCY_LEFT_SILENT = (-2, "Dependency left silent")
 
     @property
     def weight(self) -> int:
@@ -121,4 +124,11 @@ MANAGER_AUTONOMY_EVENTS = (
     TrustEvent(TrustEventKind.BLOCKER_ESCALATED, "Alex promptly surfaced the vendor validation blocker."),
     TrustEvent(TrustEventKind.RECOMMENDATION_PROVIDED, "Alex recommended preserving the public contract."),
     TrustEvent(TrustEventKind.FOLLOW_UP_COMPLETED, "Alex completed the promised manager update."),
+)
+
+COLLABORATION_EVENTS = (
+    TrustEvent(TrustEventKind.DEPENDENCY_ACKNOWLEDGED, "Alex made Jordan's contract dependency explicit."),
+    TrustEvent(TrustEventKind.HANDOFF_ACCEPTED, "Jordan confirmed the supplied contract and fixtures were usable."),
+    TrustEvent(TrustEventKind.PEER_OWNERSHIP_RESPECTED, "Focused help returned frontend ownership to Jordan."),
+    TrustEvent(TrustEventKind.FOLLOW_UP_COMPLETED, "Alex answered the bounded integration follow-up."),
 )
