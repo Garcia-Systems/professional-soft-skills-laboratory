@@ -24,6 +24,7 @@ from soft_skills_lab.trust import MANAGER_AUTONOMY_EVENTS
 from soft_skills_lab.scenarios.collaboration import TIMELINE as COLLABORATION_TIMELINE
 from soft_skills_lab.trust import COLLABORATION_EVENTS
 from soft_skills_lab.trust import STAKEHOLDER_EVENTS
+from soft_skills_lab.evaluation.judgment import evaluate_judgment_response
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,8 +35,10 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate = commands.add_parser("evaluate", help="evaluate a reference response")
     evaluate.add_argument("scenario_id")
     evaluate.add_argument("response_id")
+    evaluate.add_argument("--at", default="T2")
     compare = commands.add_parser("compare", help="compare reference behaviors without a numeric ranking")
     compare.add_argument("scenario_id")
+    compare.add_argument("--at", default="T2")
     interpret = commands.add_parser("interpret", help="inspect the deterministic communication gap")
     interpret.add_argument("scenario_id")
     unknowns = commands.add_parser("unknowns", help="inspect decision relevance and information sources")
@@ -140,6 +143,12 @@ def build_parser() -> argparse.ArgumentParser:
     leadership.add_argument("scenario_id")
     coordination = commands.add_parser("coordination-map", help="inspect authored cross-owner dependencies")
     coordination.add_argument("scenario_id")
+    judgment = commands.add_parser("judgment", help="inspect explicit professional judgment factors")
+    judgment.add_argument("scenario_id"); judgment.add_argument("--at", default="T2")
+    judgment_options = commands.add_parser("judgment-options", help="inspect contextual options without scoring")
+    judgment_options.add_argument("scenario_id"); judgment_options.add_argument("--at", default="T2")
+    judgment_record = commands.add_parser("judgment-record", help="inspect a decision against facts known at the time")
+    judgment_record.add_argument("scenario_id")
     return parser
 
 
@@ -174,11 +183,13 @@ def _scenario_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
-def _evaluation_text(scenario_id: str, response_id: str) -> str:
+def _evaluation_text(scenario_id: str, response_id: str, at: str = "T2") -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.influence_context is not None:
+    if scenario.judgment_contexts:
+        results = evaluate_judgment_response(scenario, response, at)
+    elif scenario.influence_context is not None:
         results = evaluate_leadership_response(scenario, response)
     elif response.written_message is not None:
         results = evaluate_written_response(scenario, response)
@@ -236,7 +247,16 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     return "\n".join(lines)
 
 
-def _comparison_text(scenario_id: str) -> str:
+def _comparison_text(scenario_id: str, at: str = "T2") -> str:
+    if scenario_id == "production-timeout":
+        headings=("EVIDENCE","RISK FIT","AUTHORITY","DELAY","REVERSIBILITY")
+        ids=("uses-available-evidence-before-acting","matches-action-to-risk","matches-action-to-authority","considers-delay-cost","considers-reversibility")
+        scenario=get_scenario(scenario_id); lines=[f"CONTEXT: {at.upper()}",f"{'PATH':25} "+" ".join(f"{x:14}" for x in headings)]
+        for response in list_responses(scenario_id):
+            values={r.criterion.criterion_id:r.outcome.value for r in evaluate_judgment_response(scenario,response,at)}
+            lines.append(f"{response.response_id:25} "+" ".join(f"{values[x]:14}" for x in ids))
+        lines.append("\nDimensions change with context and remain separate; no judgment score is calculated.")
+        return "\n".join(lines)
     if scenario_id == "verification-launch":
         headings = ("OBJECTIVE", "OWNERSHIP", "DEPENDENCIES", "EVIDENCE", "ESCALATION")
         dimensions = {
@@ -1172,15 +1192,42 @@ def _coordination_map_text(scenario_id: str) -> str:
         lines.append("")
     return "\n".join(lines).rstrip()
 
+def _judgment_context(scenario_id: str, at: str):
+    contexts=get_scenario(scenario_id).judgment_contexts
+    for context in contexts:
+        if context.time.upper()==at.upper(): return context
+    raise KeyError(f"judgment context unavailable for {scenario_id} at {at}")
+
+def _judgment_text(scenario_id: str, at: str) -> str:
+    c=_judgment_context(scenario_id,at)
+    lines=["SITUATION",c.situation,"","KNOWN",*(f"- {x}" for x in c.known_facts),"","UNKNOWN",*(f"- {x}" for x in c.unknowns),
+           "","URGENCY",c.urgency,"","IMPACT",c.impact,"","REVERSIBILITY",c.reversibility,"","AUTHORITY",c.authority_boundary,
+           "","DECISION OWNER",c.decision_owner,"","DELAY COST",c.delay_cost,"","DEPENDENCY IMPACT",*(f"- {x}" for x in c.dependency_impact),
+           "","POLICY / SAFETY CONSTRAINTS",*(f"- {x}" for x in c.policy_constraints),"","TIME TO GATHER EVIDENCE",c.time_to_gather_evidence,
+           "","RECOMMENDED PROFESSIONAL MODE",c.recommended_mode,"","WHY",c.rationale]
+    return "\n".join(lines)
+
+def _judgment_options_text(scenario_id: str, at: str) -> str:
+    c=_judgment_context(scenario_id,at); lines=[f"JUDGMENT OPTIONS — {at.upper()}","Tradeoffs are explained; options are not numerically ranked."]
+    for o in c.options:
+        lines += ["",f"OPTION: {o.action}",f"Acceptable: {o.acceptable.value}","Benefits: "+"; ".join(o.benefits),"Risks: "+"; ".join(o.risks),f"Authority fit: {o.authority_fit}",f"Reversibility: {o.reversibility}",f"Delay impact: {o.delay_impact}",f"Evidence requirement: {o.evidence_requirement}"]
+        if o.conditions: lines.append("Conditions: "+"; ".join(o.conditions))
+    return "\n".join(lines)
+
+def _judgment_record_text(scenario_id: str) -> str:
+    r=get_scenario(scenario_id).judgment_record
+    if r is None: raise KeyError(f"judgment record unavailable for scenario: {scenario_id}")
+    return "\n".join(["JUDGMENT RECORD",r.situation,"","TIME",r.time,"","FACTS KNOWN AT THE TIME",*(f"- {x}" for x in r.facts),"","UNCERTAINTY",*(f"- {x}" for x in r.uncertainty),"","CHOICE",r.choice,"","RATIONALE",r.rationale,"","OWNER",r.owner,"","EXPECTED CONSEQUENCE",r.expected_consequence,"","REVIEW POINT",r.review_point,"","LATER OUTCOME",r.later_outcome or "Not yet known","","The outcome does not retroactively replace the evidence available at decision time."])
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         if args.command == "scenario":
             output = _scenario_text(args.scenario_id)
         elif args.command == "evaluate":
-            output = _evaluation_text(args.scenario_id, args.response_id)
+            output = _evaluation_text(args.scenario_id, args.response_id, args.at)
         elif args.command == "compare":
-            output = _comparison_text(args.scenario_id)
+            output = _comparison_text(args.scenario_id, args.at)
         elif args.command == "interpret":
             output = _interpretation_text(args.scenario_id)
         elif args.command == "unknowns":
@@ -1287,6 +1334,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _leadership_text(args.scenario_id)
         elif args.command == "coordination-map":
             output = _coordination_map_text(args.scenario_id)
+        elif args.command == "judgment":
+            output = _judgment_text(args.scenario_id,args.at)
+        elif args.command == "judgment-options":
+            output = _judgment_options_text(args.scenario_id,args.at)
+        elif args.command == "judgment-record":
+            output = _judgment_record_text(args.scenario_id)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

@@ -17,6 +17,76 @@ class Outcome(Enum):
     FAIL = "FAIL"
 
 
+class ProfessionalChoice(Enum):
+    """A professional mode, not a moral ranking or exhaustive workflow."""
+
+    ACT = "ACT"
+    ASK = "ASK"
+    INFORM = "INFORM"
+    CONSULT = "CONSULT"
+    ESCALATE = "ESCALATE"
+    WAIT = "WAIT"
+    DEFER = "DEFER"
+    REFUSE = "REFUSE"
+    SAY_NO = "SAY NO"
+    PAUSE = "PAUSE"
+    COMMIT = "COMMIT"
+
+
+@dataclass(frozen=True)
+class JudgmentOption:
+    """An inspectable option and its contextual tradeoffs; never a score."""
+
+    option_id: str
+    action: str
+    benefits: tuple[str, ...]
+    risks: tuple[str, ...]
+    authority_fit: str
+    reversibility: str
+    delay_impact: str
+    evidence_requirement: str
+    acceptable: Outcome
+    conditions: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class JudgmentContext:
+    """Facts and decision factors available at one authored point in time."""
+
+    actor: str
+    situation: str
+    time: str
+    known_facts: tuple[str, ...]
+    unknowns: tuple[str, ...]
+    urgency: str
+    impact: str
+    reversibility: str
+    authority_boundary: str
+    decision_owner: str
+    available_alternatives: tuple[str, ...]
+    dependency_impact: tuple[str, ...]
+    policy_constraints: tuple[str, ...]
+    time_to_gather_evidence: str
+    delay_cost: str
+    recommended_mode: str
+    rationale: str
+    options: tuple[JudgmentOption, ...] = ()
+
+
+@dataclass(frozen=True)
+class JudgmentRecord:
+    situation: str
+    time: str
+    facts: tuple[str, ...]
+    uncertainty: tuple[str, ...]
+    choice: str
+    rationale: str
+    owner: str
+    expected_consequence: str
+    review_point: str
+    later_outcome: str | None = None
+
+
 class CommitmentStatus(Enum):
     PLANNED = "planned"
     IN_PROGRESS = "in_progress"
@@ -1114,6 +1184,8 @@ class WorkplaceScenario:
     meeting_context: MeetingContext | None = None
     written_artifacts: tuple[WrittenMessage, ...] = ()
     influence_context: InfluenceContext | None = None
+    judgment_contexts: tuple[JudgmentContext, ...] = ()
+    judgment_record: JudgmentRecord | None = None
 
 
 @dataclass(frozen=True)
@@ -1304,6 +1376,10 @@ class ProfessionalResponse:
     missing_decision_owner_identified: bool = False
     coordination_state_updated: bool = False
     contributors_credited_accurately: bool = False
+    professional_choice: ProfessionalChoice | None = None
+    judgment_outcomes: tuple[tuple[str, Outcome], ...] = ()
+    contextual_judgment_outcomes: tuple[tuple[str, tuple[tuple[str, Outcome], ...]], ...] = ()
+    trust_evidence: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

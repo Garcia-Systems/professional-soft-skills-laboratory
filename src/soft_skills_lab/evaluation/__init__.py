@@ -20,8 +20,9 @@ from soft_skills_lab.evaluation.interviews import evaluate_interview_response
 from soft_skills_lab.evaluation.meetings import evaluate_meeting_response
 from soft_skills_lab.evaluation.writing import evaluate_written_response
 from soft_skills_lab.evaluation.leadership import evaluate_leadership_response
+from soft_skills_lab.evaluation.judgment import evaluate_judgment_response, evidence_for_judgment
 
 __all__ = ["CRITERIA", "evaluate_commitment_response", "evaluate_incident_response", "evaluate_listening_response",
            "evaluate_question_response", "evaluate_question_sequence", "evaluate_explanation", "evaluate_status_response",
            "evaluate_uncertainty_response", "evaluate_feedback_response", "evaluate_responsibility_response", "evaluate_incident_behavior",
-           "evaluate_conflict_response", "evaluate_disagreement_response", "evaluate_manager_response", "evaluate_collaboration_response", "evaluate_stakeholder_response", "evaluate_requirement_response", "evaluate_personal_capacity_response", "evaluate_performance_response", "evaluate_interview_response", "evaluate_meeting_response", "evaluate_written_response", "evaluate_leadership_response", "evidence_for_commitment"]
+           "evaluate_conflict_response", "evaluate_disagreement_response", "evaluate_manager_response", "evaluate_collaboration_response", "evaluate_stakeholder_response", "evaluate_requirement_response", "evaluate_personal_capacity_response", "evaluate_performance_response", "evaluate_interview_response", "evaluate_meeting_response", "evaluate_written_response", "evaluate_leadership_response", "evaluate_judgment_response", "evidence_for_judgment", "evidence_for_commitment"]

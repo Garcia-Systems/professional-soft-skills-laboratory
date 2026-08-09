@@ -5,6 +5,19 @@ from enum import Enum
 
 
 class TrustEventKind(Enum):
+    ACTED_WITHIN_AUTHORITY = (1, "Acted within authority")
+    MATERIAL_RISK_ESCALATED_WITH_JUDGMENT = (2, "Escalated material risk with judgment")
+    REVERSIBLE_EXPERIMENT_USED = (1, "Reversible experiment used")
+    BOUNDARY_VIOLATION_REFUSED = (2, "Boundary violation refused")
+    TRADEOFF_SURFACED = (1, "Tradeoff surfaced")
+    DECISION_ADJUSTED_AFTER_NEW_EVIDENCE = (2, "Decision adjusted after new evidence")
+    JUDGMENT_RATIONALE_DOCUMENTED = (1, "Judgment rationale documented")
+    UNNECESSARY_ESCALATION = (-1, "Unnecessary escalation")
+    MATERIAL_RISK_IGNORED = (-3, "Material risk ignored")
+    IRREVERSIBLE_ACTION_UNDER_AMBIGUITY = (-3, "Irreversible action under unresolved ambiguity")
+    UNAUTHORIZED_COMMITMENT = (-2, "Unauthorized commitment")
+    UNSAFE_SHORTCUT = (-3, "Unsafe shortcut")
+    VALIDATION_FALSIFIED = (-3, "Validation falsified")
     PREPARED_FOR_WORK = (1, "Prepared for work")
     RISK_COMMUNICATED_EARLY = (2, "Risk communicated early")
     COMMITMENT_KEPT = (2, "Commitment kept")
