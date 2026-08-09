@@ -205,6 +205,24 @@ python -m soft_skills_lab evaluate manager-material-risk document-and-escalate
 python -m soft_skills_lab evaluate public-deadline-conflict change-venue
 ```
 
+Practice Chapter 11's managed autonomy and contextual visibility thresholds:
+
+```bash
+python -m soft_skills_lab scenario project-autonomy
+python -m soft_skills_lab compare project-autonomy
+python -m soft_skills_lab evaluate project-autonomy managed-autonomy
+python -m soft_skills_lab evaluate project-autonomy visibility-with-recommendation
+python -m soft_skills_lab manager-agreement project-autonomy
+python -m soft_skills_lab visibility project-autonomy
+python -m soft_skills_lab evaluate deployment-ownership professional-ownership
+python -m soft_skills_lab evaluate vague-manager-direction clarify-outcome
+python -m soft_skills_lab evaluate changing-autonomy expanded-autonomy
+python -m soft_skills_lab evaluate micromanagement-clarification clarify-boundaries
+python -m soft_skills_lab evaluate manager-unavailable use-boundaries
+python -m soft_skills_lab evaluate manager-one-on-one prepared-topics
+python -m soft_skills_lab manager-trust
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -220,7 +238,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 8. **Taking Responsibility** (implemented)
 9. **Disagreeing Professionally** (implemented)
 10. **Conflict and De-escalation** (implemented)
-11. Working With Managers
+11. **Working With Managers** (implemented)
 12. Working With Teammates
 13. Working With Business Stakeholders
 14. Handling Ambiguous Requirements

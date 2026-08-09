@@ -9,8 +9,9 @@ from soft_skills_lab.evaluation.feedback import evaluate_feedback_response
 from soft_skills_lab.evaluation.responsibility import evaluate_responsibility_response
 from soft_skills_lab.evaluation.disagreement import evaluate_disagreement_response
 from soft_skills_lab.evaluation.conflict import evaluate_conflict_response
+from soft_skills_lab.evaluation.managers import evaluate_manager_response
 
 __all__ = ["CRITERIA", "evaluate_commitment_response", "evaluate_incident_response", "evaluate_listening_response",
            "evaluate_question_response", "evaluate_question_sequence", "evaluate_explanation", "evaluate_status_response",
            "evaluate_uncertainty_response", "evaluate_feedback_response", "evaluate_responsibility_response",
-           "evaluate_conflict_response", "evaluate_disagreement_response", "evidence_for_commitment"]
+           "evaluate_conflict_response", "evaluate_disagreement_response", "evaluate_manager_response", "evidence_for_commitment"]

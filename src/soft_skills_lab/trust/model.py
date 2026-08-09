@@ -40,6 +40,15 @@ class TrustEventKind(Enum):
     GROUP_GENERALIZATION = (-2, "Group generalization")
     PERSONAL_ATTACK = (-2, "Personal attack")
     CONFLICT_REPEATED_AFTER_RESOLUTION = (-3, "Conflict repeated after resolution")
+    ROUTINE_DECISION_OWNED = (1, "Routine decision owned")
+    CONSULTATION_THRESHOLD_RESPECTED = (2, "Consultation threshold respected")
+    BLOCKER_ESCALATED = (2, "Blocker escalated")
+    RECOMMENDATION_PROVIDED = (1, "Recommendation provided")
+    RISK_DISCOVERED_BY_MANAGER = (-3, "Manager forced to discover risk")
+    ROUTINE_DECISION_DELEGATED_UPWARD = (-1, "Routine decision unnecessarily delegated upward")
+    CONSULTATION_BOUNDARY_BYPASSED = (-2, "Consultation boundary bypassed")
+    BLOCKER_HIDDEN = (-3, "Blocker hidden")
+    UNSTRUCTURED_STATUS_NOISE = (-1, "Repeated unstructured status noise")
 
     @property
     def weight(self) -> int:
@@ -103,4 +112,13 @@ CONFLICT_EVENTS = (
     TrustEvent(TrustEventKind.OWN_ESCALATION_REPAIRED, "Alex corrected a sharp code-review reply."),
     TrustEvent(TrustEventKind.MATERIAL_CONCERN_PRESERVED, "Alex lowered friction without hiding customer-data risk."),
     TrustEvent(TrustEventKind.DECISION_SUPPORTED_AFTER_RESOLUTION, "Alex supported the legitimate resolved tradeoff."),
+)
+
+MANAGER_AUTONOMY_EVENTS = (
+    TrustEvent(TrustEventKind.ROUTINE_DECISION_OWNED, "Alex handled the internal adapter refactor independently."),
+    TrustEvent(TrustEventKind.RISK_COMMUNICATED_EARLY, "Alex surfaced material T8 risk at the agreed threshold."),
+    TrustEvent(TrustEventKind.CONSULTATION_THRESHOLD_RESPECTED, "Alex consulted before changing Jordan's contract."),
+    TrustEvent(TrustEventKind.BLOCKER_ESCALATED, "Alex promptly surfaced the vendor validation blocker."),
+    TrustEvent(TrustEventKind.RECOMMENDATION_PROVIDED, "Alex recommended preserving the public contract."),
+    TrustEvent(TrustEventKind.FOLLOW_UP_COMPLETED, "Alex completed the promised manager update."),
 )
