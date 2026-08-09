@@ -131,6 +131,25 @@ python -m soft_skills_lab evaluate migration-safety-unknown inspect-first
 python -m soft_skills_lab evaluate customer-payment-verification customer-safe
 ```
 
+Practice Chapter 7's evidence-based feedback reception:
+
+```bash
+python -m soft_skills_lab scenario project-visibility
+python -m soft_skills_lab evaluate project-visibility immediate-defense
+python -m soft_skills_lab evaluate project-visibility blame-shift
+python -m soft_skills_lab evaluate project-visibility automatic-agreement
+python -m soft_skills_lab evaluate project-visibility explanation-as-defense
+python -m soft_skills_lab evaluate project-visibility silent-compliance
+python -m soft_skills_lab evaluate project-visibility understand-and-respond
+python -m soft_skills_lab compare project-visibility
+python -m soft_skills_lab feedback project-visibility
+python -m soft_skills_lab feedback vague-manager-feedback
+python -m soft_skills_lab evaluate vague-manager-feedback clarify-without-capitulating
+python -m soft_skills_lab evaluate adapter-review evidence-based-disagreement
+python -m soft_skills_lab evaluate feedback-follow-up demonstrated-change
+python -m soft_skills_lab improvement feedback-follow-up
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -142,7 +161,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 4. **Explaining Technical Ideas Simply** (implemented)
 5. **Giving Status Updates** (implemented)
 6. **Saying “I Don’t Know” Professionally** (implemented)
-7. Receiving Feedback Without Defensiveness
+7. **Receiving Feedback Without Defensiveness** (implemented)
 8. Taking Responsibility
 9. Disagreeing Professionally
 10. Conflict and De-escalation

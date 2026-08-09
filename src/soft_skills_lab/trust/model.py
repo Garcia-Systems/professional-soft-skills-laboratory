@@ -17,6 +17,8 @@ class TrustEventKind(Enum):
     DEPENDENCY_ACKNOWLEDGED = (1, "Dependency acknowledged")
     EXPECTATION_CLARIFIED = (1, "Expectation clarified")
     CORRECTIVE_ACTION_TAKEN = (1, "Corrective action taken")
+    FEEDBACK_RECEIVED = (0, "Feedback received")
+    CHANGED_BEHAVIOR_DEMONSTRATED = (2, "Changed behavior demonstrated")
 
     @property
     def weight(self) -> int:
@@ -51,4 +53,11 @@ DEMO_EVENTS = (
     TrustEvent(TrustEventKind.MISTAKE_ACKNOWLEDGED, "Reported an incorrect configuration without concealment."),
     TrustEvent(TrustEventKind.FOLLOW_UP_COMPLETED, "Shared the promised corrective-action notes."),
     TrustEvent(TrustEventKind.COMMITMENT_MISSED_WITHOUT_WARNING, "Missed a later review with no advance notice."),
+)
+
+FEEDBACK_IMPROVEMENT_EVENTS = (
+    TrustEvent(TrustEventKind.FEEDBACK_RECEIVED, "Alex received feedback about surfacing material delivery risk."),
+    TrustEvent(TrustEventKind.EXPECTATION_CLARIFIED, "Alex and Morgan clarified the early-risk update expectation."),
+    TrustEvent(TrustEventKind.RISK_COMMUNICATED_EARLY, "Alex reported the next material risk when discovered at T2."),
+    TrustEvent(TrustEventKind.CHANGED_BEHAVIOR_DEMONSTRATED, "Alex named the dependency at T2 and followed up at T3."),
 )
