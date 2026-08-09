@@ -34,6 +34,46 @@ class StatusCategory(Enum):
     COMPLETED = "completed"
 
 
+class UncertaintyKind(Enum):
+    """Why an answer is unavailable; each kind implies a different response."""
+
+    UNKNOWN = "unknown"
+    UNCERTAIN = "uncertain"
+    NOT_YET_INVESTIGATED = "not-yet-investigated"
+    UNKNOWABLE_FROM_CURRENT_EVIDENCE = "unknowable-from-current-evidence"
+
+
+@dataclass(frozen=True)
+class Hypothesis:
+    """A possible explanation, explicitly distinct from an established fact."""
+
+    hypothesis_id: str
+    statement: str
+    evidence_basis: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class Uncertainty:
+    """Scenario-authored knowledge state, not inferred from message wording."""
+
+    subject: str
+    kind: UncertaintyKind
+    current_evidence: tuple[str, ...] = ()
+    missing_evidence: tuple[str, ...] = ()
+    current_hypotheses: tuple[str, ...] = ()
+    decision_impact: str | None = None
+    next_investigation_steps: tuple[str, ...] = ()
+    expected_update_point: int | None = None
+
+
+@dataclass(frozen=True)
+class EvidenceContext:
+    established_facts: tuple[str, ...]
+    hypotheses: tuple[Hypothesis, ...] = ()
+    not_yet_established: tuple[str, ...] = ()
+    uncertainty: Uncertainty | None = None
+
+
 @dataclass(frozen=True)
 class Forecast:
     """An evidence-based estimate, not a promise or numeric probability."""
@@ -231,6 +271,7 @@ class WorkplaceScenario:
     communication_context: CommunicationContext | None = None
     question_context: QuestionContext | None = None
     explanation_context: ExplanationContext | None = None
+    evidence_context: EvidenceContext | None = None
 
 
 @dataclass(frozen=True)
@@ -279,6 +320,15 @@ class ProfessionalResponse:
     preserves_uncertainty: bool = False
     supports_decision: bool = False
     status_update: StatusUpdate | None = None
+    states_uncertainty_explicitly: bool = False
+    exceeds_available_evidence: bool = False
+    offered_hypothesis: str | None = None
+    hypothesis_labeled: bool = False
+    evidence_basis: tuple[str, ...] = ()
+    missing_evidence_identified: tuple[str, ...] = ()
+    uncertainty_next_action: str | None = None
+    decision_impact: str | None = None
+    estimate_for: str | None = None
 
 
 @dataclass(frozen=True)

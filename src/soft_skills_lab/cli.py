@@ -3,13 +3,15 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_status_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
 from soft_skills_lab.scenarios.questions import REPORT_ANSWERS, REPORT_EXPORT, REPORT_RESPONSES, apply_answers
 from soft_skills_lab.scenarios.explanations import AUDIENCE_EXPLANATIONS, PAYMENT_RESPONSES
 from soft_skills_lab.scenarios.status_updates import INTEGRATION_TIMELINE, PRIMARY_RESPONSE_IDS as STATUS_RESPONSE_IDS, STATUS_AUDIENCE_UPDATES
+from soft_skills_lab.scenarios.uncertainty import PROFILE_RESPONSES
+from soft_skills_lab.evaluation.uncertainty import CRITERIA as UNCERTAINTY_CRITERIA
 from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
 
 
@@ -38,6 +40,10 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("scenario_id")
     status.add_argument("response_id")
     status.add_argument("--audience", choices=("jordan", "morgan", "business"))
+    evidence = commands.add_parser("evidence", help="inspect established facts, hypotheses, and open conclusions")
+    evidence.add_argument("scenario_id")
+    uncertainty = commands.add_parser("uncertainty", help="inspect authored current knowledge and next evidence")
+    uncertainty.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     return parser
 
@@ -67,7 +73,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario_id in ("integration-delivery", "credential-blocker", "verification-completion"):
+    if scenario.evidence_context is not None:
+        results = evaluate_uncertainty_response(scenario, response)
+    elif scenario_id in ("integration-delivery", "credential-blocker", "verification-completion"):
         results = evaluate_status_response(scenario, response)
     elif scenario.explanation_context is not None or scenario_id == "database-migration":
         results = evaluate_explanation(response)
@@ -94,6 +102,17 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "profile-update-failure":
+        headings = ("EXPLICIT", "EVIDENCE", "HYPOTHESIS", "BASIS", "MISSING", "ACTION", "FOLLOW-UP", "IMPACT")
+        ids = tuple(item.criterion_id for item in UNCERTAINTY_CRITERIA[:8])
+        primary_ids = ("bluff", "defensive-certainty", "empty-unknown", "speculative-answer", "investigation-dump", "bounded-uncertainty")
+        lines = [f"{'PATH':23} " + " ".join(f"{item:10}" for item in headings)]
+        scenario = get_scenario(scenario_id)
+        for response_id in primary_ids:
+            results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_uncertainty_response(scenario, PROFILE_RESPONSES[response_id])}
+            lines.append(f"{response_id:23} " + " ".join(f"{results[item]:10}" for item in ids))
+        lines.append("\nTruthful uncertainty is stronger than bluffing; bounded uncertainty also carries a next action.")
+        return "\n".join(lines)
     if scenario_id == "integration-delivery":
         headings = ("STATE", "PROGRESS", "RISK", "DEPENDENCY", "BLOCKER", "FORECAST", "FOLLOW-UP", "DETAIL")
         ids = ("states-current-state", "communicates-material-progress", "communicates-risk", "communicates-dependency-impact",
@@ -247,6 +266,33 @@ def _status_text(scenario_id: str, response_id: str, audience_id: str | None = N
     return "\n".join(lines)
 
 
+def _evidence_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).evidence_context
+    if context is None:
+        raise KeyError(f"evidence inspection unavailable for scenario: {scenario_id}")
+    lines = ["ESTABLISHED FACTS", "", *(f"- {item}" for item in context.established_facts),
+             "", "CURRENT HYPOTHESES", ""]
+    lines.extend(f"- {item.statement}" for item in context.hypotheses)
+    lines.extend(("", "NOT YET ESTABLISHED", ""))
+    lines.extend(f"- {item}" for item in context.not_yet_established)
+    return "\n".join(lines)
+
+
+def _uncertainty_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).evidence_context
+    uncertainty = context.uncertainty if context else None
+    if uncertainty is None:
+        raise KeyError(f"uncertainty inspection unavailable for scenario: {scenario_id}")
+    answer = uncertainty.kind.value.replace("-", " ").title()
+    lines = ["QUESTION", uncertainty.subject, "", "CURRENT ANSWER", answer,
+             "", "WHAT IS KNOWN", *(f"- {item}" for item in uncertainty.current_evidence),
+             "", "WHY ANSWER IS UNKNOWN", *(f"- {item}" for item in uncertainty.missing_evidence),
+             "", "NEXT EVIDENCE", *(f"- {item}" for item in uncertainty.next_investigation_steps)]
+    if uncertainty.expected_update_point is not None:
+        lines.extend(("", "NEXT UPDATE", f"T{uncertainty.expected_update_point}"))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -268,6 +314,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _layers_text(args.scenario_id)
         elif args.command == "status":
             output = _status_text(args.scenario_id, args.response_id, args.audience)
+        elif args.command == "evidence":
+            output = _evidence_text(args.scenario_id)
+        elif args.command == "uncertainty":
+            output = _uncertainty_text(args.scenario_id)
         else:
             output = _trust_text()
     except KeyError as error:
