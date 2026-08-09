@@ -1,5 +1,7 @@
 # Chapter 7: Receiving Feedback Without Defensiveness
 
+![Chapter 7 — Receiving Feedback Without Defensiveness](../images/chapters/chapter-07-receiving-feedback-without-defensiveness.png)
+
 ## Educational question
 
 > How can you take feedback seriously without immediately defending yourself or automatically accepting every conclusion?

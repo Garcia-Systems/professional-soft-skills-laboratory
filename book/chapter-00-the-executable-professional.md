@@ -1,5 +1,7 @@
 # Chapter 0: The Executable Professional
 
+![Chapter 0 — The Executable Professional](../images/chapters/chapter-00-the-executable-professional.png)
+
 > **Thesis:** Professional soft skills can be treated as observable decisions and behaviors that can be modeled, rehearsed, evaluated, and improved.
 
 ## From labels to actions

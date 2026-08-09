@@ -1,5 +1,7 @@
 # Chapter 17: Performance Feedback and PIPs
 
+![Chapter 17 — Performance Feedback and PIPs](../images/chapters/chapter-17-performance-feedback-and-pips.png)
+
 ## Educational question
 
 > How do you turn “your performance needs to improve” into a concrete plan that both you and your manager can actually evaluate?

@@ -1,5 +1,7 @@
 # Chapter 19 — Meetings and Presence
 
+![Chapter 19 — Meetings and Presence](../images/chapters/chapter-19-meetings-and-presence.png)
+
 ## Educational question
 
 > How do you make your presence in a meeting useful without measuring usefulness by how much you talk?

@@ -1,5 +1,7 @@
 # Chapter 5: Giving Status Updates
 
+![Chapter 5 — Giving Status Updates](../images/chapters/chapter-05-giving-status-updates.png)
+
 ## Educational question
 
 > How do you communicate the state of work so that other people do not have to discover it themselves?

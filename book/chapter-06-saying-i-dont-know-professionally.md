@@ -1,5 +1,7 @@
 # Chapter 6: Saying “I Don't Know” Professionally
 
+![Chapter 6 — Saying “I Don't Know” Professionally](../images/chapters/chapter-06-saying-i-dont-know-professionally.png)
+
 ## Educational question
 
 > How do you communicate uncertainty in a way that increases rather than decreases professional trust?

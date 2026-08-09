@@ -1,5 +1,7 @@
 # Chapter 8: Taking Responsibility
 
+![Chapter 8 — Taking Responsibility](../images/chapters/chapter-08-taking-responsibility.png)
+
 ## Educational question
 
 > How do you accurately own a professional mistake without denying it, exaggerating it, or turning responsibility into self-punishment?

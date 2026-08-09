@@ -1,5 +1,7 @@
 # Chapter 10: Conflict and De-escalation
 
+![Chapter 10 — Conflict and De-escalation](../images/chapters/chapter-10-conflict-and-de-escalation.png)
+
 ## Educational question
 
 > How do you keep a tense conversation from becoming a fight about the people instead of a decision about the work?
