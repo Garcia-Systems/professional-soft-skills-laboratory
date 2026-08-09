@@ -52,6 +52,16 @@ class TrustEventKind(Enum):
     HANDOFF_ACCEPTED = (2, "Handoff accepted")
     PEER_OWNERSHIP_RESPECTED = (1, "Peer ownership respected")
     DEPENDENCY_LEFT_SILENT = (-2, "Dependency left silent")
+    BUSINESS_GOAL_CLARIFIED = (1, "Business goal clarified")
+    TECHNICAL_RISK_MADE_VISIBLE = (2, "Technical risk made visible")
+    TRADEOFF_EXPLAINED = (2, "Tradeoff explained")
+    SCOPE_CHANGE_MADE_EXPLICIT = (2, "Scope change made explicit")
+    COMMITMENT_ALIGNED_TO_DECISION = (2, "Commitment aligned to decision")
+    REQUEST_LITERALIZED_WITHOUT_ANALYSIS = (-2, "Request literalized without analysis")
+    SCOPE_CHANGED_SILENTLY = (-3, "Scope changed silently")
+    TECHNICAL_CONSTRAINT_HIDDEN = (-2, "Technical constraint hidden")
+    STAKEHOLDER_CONTEXT_DISMISSED = (-2, "Stakeholder context dismissed")
+    UNSUPPORTED_COMMITMENT_MADE = (-3, "Unsupported commitment made")
 
     @property
     def weight(self) -> int:
@@ -131,4 +141,14 @@ COLLABORATION_EVENTS = (
     TrustEvent(TrustEventKind.HANDOFF_ACCEPTED, "Jordan confirmed the supplied contract and fixtures were usable."),
     TrustEvent(TrustEventKind.PEER_OWNERSHIP_RESPECTED, "Focused help returned frontend ownership to Jordan."),
     TrustEvent(TrustEventKind.FOLLOW_UP_COMPLETED, "Alex answered the bounded integration follow-up."),
+)
+
+STAKEHOLDER_EVENTS = (
+    TrustEvent(TrustEventKind.BUSINESS_GOAL_CLARIFIED, "Alex connected the export to customer-review preparation."),
+    TrustEvent(TrustEventKind.TECHNICAL_RISK_MADE_VISIBLE, "Alex explained dependency and volume-validation risk."),
+    TrustEvent(TrustEventKind.TRADEOFF_EXPLAINED, "Alex made format, date, and validation tradeoffs visible."),
+    TrustEvent(TrustEventKind.RECOMMENDATION_PROVIDED, "Alex recommended CSV for the immediate workflow, conditionally."),
+    TrustEvent(TrustEventKind.SCOPE_CHANGE_MADE_EXPLICIT, "Scheduling was treated as a decision, not silently absorbed."),
+    TrustEvent(TrustEventKind.COMMITMENT_ALIGNED_TO_DECISION, "Alex waited for selected scope before committing."),
+    TrustEvent(TrustEventKind.POSITION_UPDATED_AFTER_NEW_EVIDENCE, "Alex changed course when .xlsx became required."),
 )

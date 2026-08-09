@@ -246,6 +246,29 @@ python -m soft_skills_lab evaluate team-contribution accurate-credit
 python -m soft_skills_lab collaboration-trust
 ```
 
+Practice Chapter 13's outcome clarification, stakeholder tradeoffs, scope decisions, and recommendations:
+
+```bash
+python -m soft_skills_lab scenario reporting-export
+python -m soft_skills_lab stakeholder-request reporting-export
+python -m soft_skills_lab tradeoffs reporting-export
+python -m soft_skills_lab evaluate reporting-export literal-yes
+python -m soft_skills_lab evaluate reporting-export technical-no
+python -m soft_skills_lab evaluate reporting-export jargon-rejection
+python -m soft_skills_lab evaluate reporting-export requirement-interrogation
+python -m soft_skills_lab evaluate reporting-export silent-scope-reduction
+python -m soft_skills_lab evaluate reporting-export outcome-first-tradeoff
+python -m soft_skills_lab evaluate reporting-export recommendation-with-decision
+python -m soft_skills_lab compare reporting-export
+python -m soft_skills_lab evaluate stakeholder-search-performance clarify-experience
+python -m soft_skills_lab evaluate urgent-bulk-upload controlled-option
+python -m soft_skills_lab scope-change export-scope-change
+python -m soft_skills_lab evaluate export-security-constraint safe-alternative
+python -m soft_skills_lab evaluate xlsx-required update-recommendation
+python -m soft_skills_lab evaluate impossible-export-constraints surface-conflict
+python -m soft_skills_lab stakeholder-trust
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -263,7 +286,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 10. **Conflict and De-escalation** (implemented)
 11. **Working With Managers** (implemented)
 12. **Working With Teammates** (implemented)
-13. Working With Business Stakeholders
+13. **Working With Business Stakeholders** (implemented)
 14. Handling Ambiguous Requirements
 15. Handling Mistakes and Incidents
 16. When Personal Problems Affect Work

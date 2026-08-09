@@ -39,6 +39,7 @@ from soft_skills_lab.scenarios.conflict import (
 )
 from soft_skills_lab.scenarios.managers import MANAGER_SCENARIOS
 from soft_skills_lab.scenarios.collaboration import COLLABORATION_SCENARIOS
+from soft_skills_lab.scenarios.stakeholders import STAKEHOLDER_SCENARIOS
 
 PRODUCTION_INCIDENT = WorkplaceScenario(
     scenario_id="production-incident",
@@ -132,6 +133,7 @@ SCENARIOS = {
 }
 SCENARIOS.update(MANAGER_SCENARIOS)
 SCENARIOS.update(COLLABORATION_SCENARIOS)
+SCENARIOS.update(STAKEHOLDER_SCENARIOS)
 
 
 def get_scenario(scenario_id: str) -> WorkplaceScenario:

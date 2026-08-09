@@ -188,6 +188,47 @@ class PeerCollaboration:
 
 
 @dataclass(frozen=True)
+class StakeholderRequest:
+    """Scenario-authored request decomposition, not a parsed specification."""
+
+    requester: str
+    stated_request: str
+    business_outcome: str
+    deadline: str | None
+    constraints: tuple[str, ...]
+    preferred_solution: str | None
+    requirements: tuple[str, ...]
+    acceptance_conditions: tuple[str, ...]
+    open_questions: tuple[str, ...]
+    decision_owners: tuple[tuple[str, tuple[str, ...]], ...]
+    technical_evidence: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class TradeoffOption:
+    """A transparent option description; deliberately has no numeric score."""
+
+    option_id: str
+    description: str
+    business_value: str
+    delivery_impact: str
+    technical_risk: str
+    scope: tuple[str, ...]
+    constraints_satisfied: tuple[str, ...]
+    constraints_not_satisfied: tuple[str, ...]
+    reversibility: str
+
+
+@dataclass(frozen=True)
+class ScopeChange:
+    original_scope: tuple[str, ...]
+    requested_addition: str
+    delivery_impact: str
+    available_tradeoffs: tuple[str, ...]
+    decision: str | None = None
+
+
+@dataclass(frozen=True)
 class ManagerExpectation:
     subject: str
     threshold: VisibilityThreshold
@@ -515,6 +556,9 @@ class WorkplaceScenario:
     conflict_state: ConflictState | None = None
     working_agreement: WorkingAgreement | None = None
     peer_collaboration: PeerCollaboration | None = None
+    stakeholder_request: StakeholderRequest | None = None
+    tradeoff_options: tuple[TradeoffOption, ...] = ()
+    scope_change: ScopeChange | None = None
 
 
 @dataclass(frozen=True)
@@ -633,6 +677,15 @@ class ProfessionalResponse:
     shared_ownership_clarified: bool = False
     peer_dependency_addressed_directly: bool = False
     contribution_recognized: bool = False
+    identifies_business_outcome: bool = False
+    separates_outcome_from_solution: bool = False
+    respects_explicit_requirement: bool = True
+    communicates_tradeoff: bool = False
+    makes_scope_change_explicit: bool = False
+    provides_professional_recommendation: bool = False
+    aligns_commitment_with_decision: bool = False
+    preserves_business_context: bool = False
+    technical_risk_made_visible: bool = False
 
 
 @dataclass(frozen=True)
