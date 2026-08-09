@@ -2,6 +2,7 @@ from soft_skills_lab.evaluation.incident import CRITERIA, evaluate_incident_resp
 from soft_skills_lab.evaluation.commitment import evaluate_commitment_response, evidence_for_commitment
 from soft_skills_lab.evaluation.listening import evaluate_listening_response
 from soft_skills_lab.evaluation.questions import evaluate_question_response, evaluate_question_sequence
+from soft_skills_lab.evaluation.explanations import evaluate_explanation
 
 __all__ = ["CRITERIA", "evaluate_commitment_response", "evaluate_incident_response", "evaluate_listening_response",
-           "evaluate_question_response", "evaluate_question_sequence", "evidence_for_commitment"]
+           "evaluate_question_response", "evaluate_question_sequence", "evaluate_explanation", "evidence_for_commitment"]

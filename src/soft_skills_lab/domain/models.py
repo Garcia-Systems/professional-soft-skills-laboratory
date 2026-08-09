@@ -159,6 +159,26 @@ class ListenerInterpretation:
 
 
 @dataclass(frozen=True)
+class CommunicationAudience:
+    """A scenario-specific audience; role is context, not a competence proxy."""
+
+    audience_id: str
+    role: str
+    technical_context: str
+    decision_responsibility: str
+    information_needs: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ExplanationContext:
+    """Explicit truth and audience views used for deterministic explanations."""
+
+    audiences: tuple[CommunicationAudience, ...]
+    information_layers: tuple[tuple[str, tuple[str, ...]], ...]
+    architecture_views: tuple[tuple[str, tuple[str, ...]], ...] = ()
+
+
+@dataclass(frozen=True)
 class WorkplaceScenario:
     scenario_id: str
     title: str
@@ -170,6 +190,7 @@ class WorkplaceScenario:
     current_risk: RiskLevel
     communication_context: CommunicationContext | None = None
     question_context: QuestionContext | None = None
+    explanation_context: ExplanationContext | None = None
 
 
 @dataclass(frozen=True)
@@ -209,6 +230,14 @@ class ProfessionalResponse:
     authority_limited: bool = False
     proposed_next_action: bool = False
     problem_first_sequence: bool | None = None
+    communicated_fact_ids: tuple[str, ...] = ()
+    communicated_need_ids: tuple[str, ...] = ()
+    unsupported_claims: tuple[str, ...] = ()
+    implementation_details: tuple[str, ...] = ()
+    communicates_impact: bool = False
+    communicates_scope: bool = False
+    preserves_uncertainty: bool = False
+    supports_decision: bool = False
 
 
 @dataclass(frozen=True)

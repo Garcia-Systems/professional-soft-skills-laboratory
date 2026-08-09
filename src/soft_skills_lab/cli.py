@@ -3,11 +3,12 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_explanation, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
 from soft_skills_lab.scenarios.questions import REPORT_ANSWERS, REPORT_EXPORT, REPORT_RESPONSES, apply_answers
+from soft_skills_lab.scenarios.explanations import AUDIENCE_EXPLANATIONS, PAYMENT_RESPONSES
 from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
 
 
@@ -27,6 +28,11 @@ def build_parser() -> argparse.ArgumentParser:
     unknowns.add_argument("scenario_id")
     answer = commands.add_parser("answer", help="apply deterministic scenario answers")
     answer.add_argument("scenario_id")
+    explain = commands.add_parser("explain", help="render a deterministic audience abstraction")
+    explain.add_argument("scenario_id")
+    explain.add_argument("--audience", required=True)
+    layers = commands.add_parser("layers", help="inspect explicit information layers")
+    layers.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     return parser
 
@@ -53,7 +59,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.question_context:
+    if scenario.explanation_context is not None or scenario_id == "database-migration":
+        results = evaluate_explanation(response)
+    elif scenario.question_context:
         results = evaluate_question_response(scenario, response)
     elif scenario.communication_context:
         evaluator = evaluate_listening_response
@@ -76,6 +84,15 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "payment-timeout":
+        headings = ("TRUTH", "IMPACT", "UNCERTAINTY", "AUDIENCE", "DECISION")
+        ids = ("preserves-technical-truth", "communicates-impact", "preserves-uncertainty", "matches-audience-need", "supports-decision")
+        lines = [f"{'PATH':31} " + " ".join(f"{item:12}" for item in headings)]
+        for response_id, response in PAYMENT_RESPONSES.items():
+            results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_explanation(response)}
+            lines.append(f"{response_id:31} " + " ".join(f"{results[item]:12}" for item in ids))
+        lines.append("\nDimensions remain separate; this is not a communication score or leaderboard.")
+        return "\n".join(lines)
     if scenario_id == "report-export":
         headings = ("RELEVANT", "CONTEXT", "INVESTIGATED", "ANSWERABLE", "NO ASSUMPTION", "NO DUMP")
         criterion_ids = ("targets-relevant-unknown", "provides-context", "shows-prior-investigation", "is-answerable",
@@ -157,6 +174,31 @@ def _trust_text() -> str:
     return "\n".join(lines)
 
 
+def _explain_text(scenario_id: str, audience_id: str) -> str:
+    if scenario_id != "payment-timeout":
+        raise KeyError(f"audience explanation unavailable for scenario: {scenario_id}")
+    scenario = get_scenario(scenario_id)
+    audiences = {item.audience_id: item for item in scenario.explanation_context.audiences}
+    if audience_id not in audiences:
+        raise KeyError(f"unknown audience for {scenario_id}: {audience_id}")
+    audience, explanation = audiences[audience_id], AUDIENCE_EXPLANATIONS[audience_id]
+    return "\n".join((f"Audience: {audience.role}", f"Decision responsibility: {audience.decision_responsibility}",
+                      "Information needs: " + ", ".join(audience.information_needs), "", explanation.message,
+                      "", "Underlying fact IDs: " + ", ".join(explanation.communicated_fact_ids)))
+
+
+def _layers_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).explanation_context
+    if context is None:
+        raise KeyError(f"information layers unavailable for scenario: {scenario_id}")
+    lines: list[str] = []
+    for heading, items in context.information_layers:
+        lines.extend((heading, ""))
+        lines.extend(f"- {item}" for item in items)
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -172,6 +214,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _unknowns_text(args.scenario_id)
         elif args.command == "answer":
             output = _answer_text(args.scenario_id)
+        elif args.command == "explain":
+            output = _explain_text(args.scenario_id, args.audience)
+        elif args.command == "layers":
+            output = _layers_text(args.scenario_id)
         else:
             output = _trust_text()
     except KeyError as error:
