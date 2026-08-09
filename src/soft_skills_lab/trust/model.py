@@ -33,6 +33,13 @@ class TrustEventKind(Enum):
     DISAGREEMENT_PERSONALIZED = (-2, "Disagreement personalized")
     DECISION_UNDERMINED_AFTER_RESOLUTION = (-3, "Decision undermined after resolution")
     UNSUPPORTED_ARGUMENT_REPEATED = (-2, "Unsupported argument repeated")
+    CONFLICT_REFOCUSED = (2, "Conflict refocused")
+    OWN_ESCALATION_REPAIRED = (2, "Own escalation repaired")
+    MATERIAL_CONCERN_PRESERVED = (2, "Material concern preserved")
+    MOTIVE_ATTACK = (-2, "Motive attack")
+    GROUP_GENERALIZATION = (-2, "Group generalization")
+    PERSONAL_ATTACK = (-2, "Personal attack")
+    CONFLICT_REPEATED_AFTER_RESOLUTION = (-3, "Conflict repeated after resolution")
 
     @property
     def weight(self) -> int:
@@ -89,4 +96,11 @@ DISAGREEMENT_EVENTS = (
     TrustEvent(TrustEventKind.DECISION_SUPPORTED_AFTER_RESOLUTION, "Alex documented the tradeoff and implemented the resolved choice."),
     TrustEvent(TrustEventKind.POSITION_UPDATED_AFTER_NEW_EVIDENCE, "Alex withdrew an objection after the benchmark changed the evidence."),
     TrustEvent(TrustEventKind.MATERIAL_RISK_ESCALATED, "Alex escalated customer-data exposure through the appropriate path."),
+)
+
+CONFLICT_EVENTS = (
+    TrustEvent(TrustEventKind.CONFLICT_REFOCUSED, "Alex restored the release decision after personalization."),
+    TrustEvent(TrustEventKind.OWN_ESCALATION_REPAIRED, "Alex corrected a sharp code-review reply."),
+    TrustEvent(TrustEventKind.MATERIAL_CONCERN_PRESERVED, "Alex lowered friction without hiding customer-data risk."),
+    TrustEvent(TrustEventKind.DECISION_SUPPORTED_AFTER_RESOLUTION, "Alex supported the legitimate resolved tradeoff."),
 )

@@ -103,6 +103,44 @@ class DecisionIssueKind(Enum):
     MATERIAL_RISK = "material risk"
 
 
+class ConflictStage(Enum):
+    """Observable conversational stage, not an inferred emotional intensity."""
+
+    DISAGREEMENT = "disagreement"
+    RISING_TENSION = "rising tension"
+    PERSONALIZED_CONFLICT = "personalized conflict"
+    DE_ESCALATED = "de-escalated"
+    DECISION_RESOLVED = "decision resolved"
+
+
+@dataclass(frozen=True)
+class ConflictSignal:
+    """Scenario-authored behavior; ``statement`` is illustrative, never parsed."""
+
+    speaker: str
+    statement: str
+    interruption: bool = False
+    generalization: bool = False
+    personal_attribution: bool = False
+    repeated_unsupported_claim: bool = False
+    topic_expansion: bool = False
+    threat_or_coercion: bool = False
+
+
+@dataclass(frozen=True)
+class ConflictState:
+    """A deterministic view of a tense exchange and its decision boundary."""
+
+    stage: ConflictStage
+    current_issue: str
+    shared_facts: tuple[str, ...]
+    positions: tuple[tuple[str, str], ...]
+    signals: tuple[ConflictSignal, ...] = ()
+    expanded_issue: str | None = None
+    not_established: tuple[str, ...] = ()
+    unresolved_decision: bool = True
+
+
 @dataclass(frozen=True)
 class DecisionAlternative:
     name: str
@@ -376,6 +414,7 @@ class WorkplaceScenario:
     action_plan: BehavioralActionPlan | None = None
     responsibility_map: ResponsibilityMap | None = None
     decision_context: DecisionContext | None = None
+    conflict_state: ConflictState | None = None
 
 
 @dataclass(frozen=True)
@@ -461,6 +500,22 @@ class ProfessionalResponse:
     updates_position_with_evidence: bool = False
     escalates_material_risk: bool = False
     repeats_resolved_argument: bool = False
+    generalizes_about_person: bool = False
+    attributes_motive_without_evidence: bool = False
+    attacks_group: bool = False
+    uses_sarcasm: bool = False
+    focuses_on_current_decision: bool = False
+    acknowledges_legitimate_concern: bool = False
+    concedes_decision: bool = False
+    restores_shared_facts: bool = False
+    creates_decision_path: bool = False
+    preserves_material_risk: bool = False
+    ends_argument: bool = False
+    resolves_issue: bool = False
+    pauses_conversation: bool = False
+    pause_has_checkpoint: bool = False
+    pause_names_needed_evidence: bool = False
+    repairs_own_contribution: bool = False
 
 
 @dataclass(frozen=True)
