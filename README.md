@@ -34,12 +34,23 @@ python -m soft_skills_lab evaluate production-incident professional
 python -m soft_skills_lab trust-demo
 ```
 
+Explore Chapter 1's commitment paths:
+
+```bash
+python -m soft_skills_lab scenario commitment-at-risk
+python -m soft_skills_lab evaluate commitment-at-risk silent
+python -m soft_skills_lab evaluate commitment-at-risk vague-warning
+python -m soft_skills_lab evaluate commitment-at-risk premature-promise
+python -m soft_skills_lab evaluate commitment-at-risk professional-update
+python -m soft_skills_lab compare commitment-at-risk
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
 
 0. **The Executable Professional** (implemented)
-1. Professionalism as Observable Behavior
+1. **Professionalism as Observable Behavior** (implemented)
 2. Listening Before Responding
 3. Asking Good Questions
 4. Explaining Technical Ideas Simply
