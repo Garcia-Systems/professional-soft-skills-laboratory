@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -58,6 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
     learning.add_argument("scenario_id")
     decision = commands.add_parser("decision", help="inspect decision ownership, alternatives, and evidence")
     decision.add_argument("scenario_id")
+    conflict = commands.add_parser("conflict", help="inspect authored observable conflict state")
+    conflict.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     commands.add_parser("disagreement-trust", help="show constructive disagreement trust evidence")
     return parser
@@ -88,7 +90,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.decision_context is not None:
+    if scenario.conflict_state is not None:
+        results = evaluate_conflict_response(scenario, response)
+    elif scenario.decision_context is not None:
         results = evaluate_disagreement_response(scenario, response)
     elif scenario.responsibility_map is not None or scenario_id == "responsibility-follow-up":
         results = evaluate_responsibility_response(scenario, response)
@@ -123,6 +127,17 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "release-validation":
+        headings = ("NO ATTACK", "CURRENT ISSUE", "EVIDENCE", "DECISION PATH", "RISK PRESERVED")
+        ids = ("avoids-counterattack", "refocuses-current-issue", "restores-shared-facts", "creates-decision-path", "preserves-material-risk")
+        primary = ("counterattack", "motive-attack", "sarcasm", "capitulation", "repeat-louder", "de-escalate-and-refocus", "pause-and-resume")
+        lines = [f"{'PATH':25} " + " ".join(f"{heading:14}" for heading in headings)]
+        scenario = get_scenario(scenario_id)
+        for response_id in primary:
+            results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_conflict_response(scenario, get_response(scenario_id, response_id))}
+            lines.append(f"{response_id:25} " + " ".join(f"{results[item]:14}" for item in ids))
+        lines.append("\nDimensions stay separate: this is not a conflict-skill, calmness, or personality score.")
+        return "\n".join(lines)
     if scenario_id == "adapter-boundary":
         headings = ("UNDERSTANDS", "EVIDENCE", "NO-PERSONAL", "ALTERNATIVE", "DECISION")
         ids = ("captures-explicit-concern", "uses-decision-relevant-evidence", "avoids-personalization", "offers-constructive-alternative", "respects-decision-ownership")
@@ -448,6 +463,23 @@ def _decision_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
+def _conflict_text(scenario_id: str) -> str:
+    state = get_scenario(scenario_id).conflict_state
+    if state is None:
+        raise KeyError(f"conflict inspection unavailable for scenario: {scenario_id}")
+    lines = ["CONFLICT STAGE", state.stage.value, "", "CURRENT DECISION", state.current_issue,
+             "", "SHARED FACTS", *(f"- {fact}" for fact in state.shared_facts), "", "CURRENT DISAGREEMENT"]
+    for speaker, position in state.positions:
+        lines.extend((f"{speaker}:", position))
+    lines.extend(("", "CONFLICT-ADDING STATEMENTS"))
+    lines.extend(f'- "{signal.statement}"' for signal in state.signals)
+    if state.expanded_issue:
+        lines.extend(("", "EXPANDED ISSUE", state.expanded_issue))
+    lines.extend(("", "NOT ESTABLISHED", *(f"- {item}" for item in state.not_established), "",
+                  "UNRESOLVED DECISION", "yes" if state.unresolved_decision else "no"))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -483,6 +515,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _learning_text(args.scenario_id)
         elif args.command == "decision":
             output = _decision_text(args.scenario_id)
+        elif args.command == "conflict":
+            output = _conflict_text(args.scenario_id)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

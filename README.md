@@ -185,6 +185,26 @@ python -m soft_skills_lab evaluate sensitive-logging escalate
 python -m soft_skills_lab disagreement-trust
 ```
 
+Practice Chapter 10's observable conflict de-escalation and repair:
+
+```bash
+python -m soft_skills_lab scenario release-validation
+python -m soft_skills_lab evaluate release-validation counterattack
+python -m soft_skills_lab evaluate release-validation motive-attack
+python -m soft_skills_lab evaluate release-validation sarcasm
+python -m soft_skills_lab evaluate release-validation capitulation
+python -m soft_skills_lab evaluate release-validation repeat-louder
+python -m soft_skills_lab evaluate release-validation de-escalate-and-refocus
+python -m soft_skills_lab evaluate release-validation pause-and-resume
+python -m soft_skills_lab compare release-validation
+python -m soft_skills_lab conflict release-validation
+python -m soft_skills_lab evaluate code-review-conflict restore-technical-question
+python -m soft_skills_lab evaluate release-validation avoid-indefinitely
+python -m soft_skills_lab evaluate manager-tradeoff-conflict confirm-and-proceed
+python -m soft_skills_lab evaluate manager-material-risk document-and-escalate
+python -m soft_skills_lab evaluate public-deadline-conflict change-venue
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -199,7 +219,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 7. **Receiving Feedback Without Defensiveness** (implemented)
 8. **Taking Responsibility** (implemented)
 9. **Disagreeing Professionally** (implemented)
-10. Conflict and De-escalation
+10. **Conflict and De-escalation** (implemented)
 11. Working With Managers
 12. Working With Teammates
 13. Working With Business Stakeholders
