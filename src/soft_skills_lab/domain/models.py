@@ -162,6 +162,84 @@ class DisclosureBoundary(Enum):
     REQUIRED_FOR_REQUEST = "REQUIRED_FOR_REQUEST"
 
 
+class MeasurementKind(Enum):
+    """Quality of an authored performance measure, not a score for a person."""
+
+    ACTIVITY = "activity"
+    PERSONALITY = "personality"
+    OUTCOME_ONLY = "outcome-only"
+    OBSERVABLE_BEHAVIOR = "observable-behavior"
+
+
+class PerformancePlanStatus(Enum):
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    EXTENDED = "EXTENDED"
+    UNSATISFACTORY = "UNSATISFACTORY"
+    SUPERSEDED = "SUPERSEDED"
+
+
+@dataclass(frozen=True)
+class PerformanceMeasurement:
+    statement: str
+    kind: MeasurementKind
+    within_reasonable_control: bool
+
+
+@dataclass(frozen=True)
+class PerformanceConcern:
+    """A claim decomposed into evidence and an observable expectation."""
+
+    concern_id: str
+    category: str
+    claim: str
+    supporting_examples: tuple[str, ...]
+    unsupported_generalizations: tuple[str, ...]
+    expected_behavior: str
+    current_gap: str
+    impact: str
+    evidence_period: str
+    measurement: PerformanceMeasurement
+
+
+@dataclass(frozen=True, order=True)
+class PlanHistoryEvent:
+    day: int
+    kind: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class PerformanceCheckpoint:
+    day: int
+    concerns_reviewed: tuple[str, ...]
+    evidence_since_last: tuple[str, ...]
+    improvement_observed: tuple[str, ...]
+    unresolved_gaps: tuple[str, ...]
+    manager_feedback: str
+    employee_response: str
+    next_actions: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ImprovementPlan:
+    """Small shared behavior plan; deliberately not an HR or legal workflow."""
+
+    plan_id: str
+    title: str
+    participant: str
+    manager: str
+    concerns: tuple[PerformanceConcern, ...]
+    actions: tuple[BehavioralActionPlan, ...]
+    checkpoints: tuple[PerformanceCheckpoint, ...]
+    duration_days: int
+    status: PerformancePlanStatus
+    success_condition: str
+    positive_evidence: tuple[str, ...] = ()
+    unsupported_claims: tuple[str, ...] = ()
+    history: tuple[PlanHistoryEvent, ...] = ()
+
+
 @dataclass(frozen=True)
 class CommitmentRevision:
     original_commitment: str
@@ -787,6 +865,7 @@ class WorkplaceScenario:
     incident: Incident | None = None
     incident_audiences: tuple[tuple[str, tuple[str, ...]], ...] = ()
     work_impact: WorkImpactContext | None = None
+    performance_plan: ImprovementPlan | None = None
 
 
 @dataclass(frozen=True)
@@ -942,6 +1021,16 @@ class ProfessionalResponse:
     recognizes_task_safety: bool = False
     addresses_recurring_pattern: bool = False
     uses_formal_path_when_needed: bool = False
+    identifies_supported_performance_evidence: bool = False
+    corrects_material_inaccuracy: bool = False
+    clarifies_performance_expectation: bool = False
+    establishes_measurement: bool = False
+    establishes_checkpoints: bool = False
+    avoids_vague_improvement_promise: bool = False
+    focuses_on_controllable_behavior: bool = False
+    tracks_evidence_over_time: bool = False
+    preserves_plan_scope: bool = False
+    demonstrates_plan_improvement: bool = False
 
 
 @dataclass(frozen=True)

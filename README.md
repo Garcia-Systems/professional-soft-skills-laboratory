@@ -319,6 +319,22 @@ python -m soft_skills_lab evaluate recurring-capacity-impact durable-plan
 python -m soft_skills_lab personal-capacity-trust
 ```
 
+Practice Chapter 17's evidence-based performance planning:
+
+```bash
+python -m soft_skills_lab scenario communication-visibility
+python -m soft_skills_lab compare communication-visibility
+python -m soft_skills_lab evaluate communication-visibility clarify-and-plan
+python -m soft_skills_lab evaluate communication-visibility execute-and-demonstrate
+python -m soft_skills_lab performance-plan communication-visibility
+python -m soft_skills_lab performance-evidence communication-visibility
+python -m soft_skills_lab checkpoint communication-visibility --day 14
+python -m soft_skills_lab evaluate vague-performance-plan clarify-observable-plan
+python -m soft_skills_lab evaluate performance-factual-error correct-and-engage
+python -m soft_skills_lab evaluate impossible-performance-expectation propose-controllable-measures
+python -m soft_skills_lab evaluate changing-performance-scope clarify-new-scope
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -340,7 +356,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 14. **Handling Ambiguous Requirements** (implemented)
 15. **Handling Mistakes and Incidents** (implemented)
 16. **When Personal Problems Affect Work** (implemented)
-17. Performance Feedback and PIPs
+17. **Performance Feedback and PIPs** (implemented)
 18. Interview Communication
 19. Meetings and Presence
 20. Written Professional Communication
