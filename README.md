@@ -76,6 +76,21 @@ python -m soft_skills_lab evaluate deployment-failure professional-question
 python -m soft_skills_lab evaluate authorization-risk immediate-escalation
 ```
 
+Explore Chapter 4's truthful, decision-relevant explanations:
+
+```bash
+python -m soft_skills_lab scenario payment-timeout
+python -m soft_skills_lab evaluate payment-timeout jargon-dump
+python -m soft_skills_lab evaluate payment-timeout decision-oriented
+python -m soft_skills_lab compare payment-timeout
+python -m soft_skills_lab explain payment-timeout --audience engineer
+python -m soft_skills_lab explain payment-timeout --audience product-manager
+python -m soft_skills_lab explain payment-timeout --audience business-operations
+python -m soft_skills_lab layers payment-timeout
+python -m soft_skills_lab scenario database-migration
+python -m soft_skills_lab evaluate database-migration decision-oriented
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -84,7 +99,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 1. **Professionalism as Observable Behavior** (implemented)
 2. **Listening Before Responding** (implemented)
 3. **Asking Good Questions** (implemented)
-4. Explaining Technical Ideas Simply
+4. **Explaining Technical Ideas Simply** (implemented)
 5. Giving Status Updates
 6. Saying “I Don’t Know” Professionally
 7. Receiving Feedback Without Defensiveness
