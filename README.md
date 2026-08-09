@@ -374,6 +374,29 @@ python -m soft_skills_lab evaluate meeting-interruption clarify-after-listening
 python -m soft_skills_lab evaluate deployment-success-update use-async
 ```
 
+Practice Chapter 20's durable, decision-useful professional writing:
+
+```bash
+python -m soft_skills_lab scenario deployment-risk
+python -m soft_skills_lab evaluate deployment-risk context-free
+python -m soft_skills_lab evaluate deployment-risk activity-only
+python -m soft_skills_lab evaluate deployment-risk alarm-without-evidence
+python -m soft_skills_lab evaluate deployment-risk false-reassurance
+python -m soft_skills_lab evaluate deployment-risk wall-of-text
+python -m soft_skills_lab evaluate deployment-risk ambiguous-request
+python -m soft_skills_lab evaluate deployment-risk decision-useful
+python -m soft_skills_lab evaluate deployment-risk concise-decision-useful
+python -m soft_skills_lab compare deployment-risk
+python -m soft_skills_lab written-message deployment-risk decision-useful
+python -m soft_skills_lab written-artifact release-readiness-recap
+python -m soft_skills_lab written-artifact verification-pr-review
+python -m soft_skills_lab written-artifact verification-ticket
+python -m soft_skills_lab written-artifact api-handoff
+python -m soft_skills_lab written-artifact adapter-disagreement
+python -m soft_skills_lab written-artifact security-escalation
+python -m soft_skills_lab written-artifact material-correction
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -398,7 +421,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 17. **Performance Feedback and PIPs** (implemented)
 18. **Interview Communication** (implemented)
 19. **Meetings and Presence** (implemented)
-20. Written Professional Communication
+20. **Written Professional Communication** (implemented)
 21. Trust and Reputation
 22. Leadership Without Authority
 23. Professional Judgment

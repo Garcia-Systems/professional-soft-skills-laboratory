@@ -34,6 +34,36 @@ class StatusCategory(Enum):
     COMPLETED = "completed"
 
 
+class WrittenChannel(Enum):
+    """Delivery constraint for an authored artifact, not a formality rule."""
+
+    EMAIL = "Email"
+    CHAT = "Team chat"
+    TICKET = "Issue or ticket comment"
+    PR_COMMENT = "Pull-request comment"
+    STATUS_NOTE = "Status note"
+    HANDOFF_NOTE = "Handoff note"
+    DECISION_RECORD = "Decision record"
+
+
+class MessagePurpose(Enum):
+    INFORM = "Inform"
+    REQUEST = "Request"
+    DECIDE = "Decide"
+    CONFIRM = "Confirm"
+    HANDOFF = "Handoff"
+    ESCALATE = "Escalate"
+    DOCUMENT = "Document"
+    REVIEW = "Review"
+
+
+class ReviewIntent(Enum):
+    BLOCKING = "Blocking"
+    SUGGESTION = "Suggestion"
+    QUESTION = "Question"
+    PREFERENCE = "Preference"
+
+
 class UncertaintyKind(Enum):
     """Why an answer is unavailable; each kind implies a different response."""
 
@@ -975,6 +1005,38 @@ class MeetingContext:
 
 
 @dataclass(frozen=True)
+class WrittenMessage:
+    """Scenario-authored written behavior; prose is illustrative and never parsed."""
+
+    sender: str
+    audience: tuple[str, ...]
+    channel: WrittenChannel
+    topic: str
+    purpose: MessagePurpose
+    purpose_statement: str
+    context: tuple[str, ...] = ()
+    current_state: StatusCategory | None = None
+    established_facts: tuple[str, ...] = ()
+    uncertainty: tuple[str, ...] = ()
+    impact: tuple[str, ...] = ()
+    request: str | None = None
+    decision: str | None = None
+    action: str | None = None
+    owner: str | None = None
+    due_point: str | None = None
+    supporting_detail: tuple[str, ...] = ()
+    references: tuple[str, ...] = ()
+    follow_up_point: str | None = None
+    review_intent: ReviewIntent | None = None
+    standalone_context: bool = False
+    channel_detail_appropriate: bool = True
+    durable_record: bool = False
+    acknowledgement_required: bool = False
+    urgency_supported: bool = True
+    material_correction: bool = False
+
+
+@dataclass(frozen=True)
 class WorkplaceScenario:
     scenario_id: str
     title: str
@@ -1006,6 +1068,7 @@ class WorkplaceScenario:
     interview_question: InterviewQuestion | None = None
     experience_evidence: tuple[ExperienceEvidence, ...] = ()
     meeting_context: MeetingContext | None = None
+    written_artifacts: tuple[WrittenMessage, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1182,6 +1245,7 @@ class ProfessionalResponse:
     relevant_point_protected: bool = False
     async_recommended: bool = False
     attention_failure: bool = False
+    written_message: WrittenMessage | None = None
 
 
 @dataclass(frozen=True)
