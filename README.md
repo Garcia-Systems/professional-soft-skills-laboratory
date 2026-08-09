@@ -439,6 +439,24 @@ python -m soft_skills_lab evaluate manager-unsafe-ship professional
 python -m soft_skills_lab evaluate defensible-implementation professional
 ```
 
+## Volume I capstone
+
+Chapter 24 composes the existing requirements, commitments, handoffs, uncertainty, incident, feedback, meeting, writing, leadership, judgment, and multidimensional trust systems into one deterministic project. Volume I now forms an executable progression from individual professional behaviors to an integrated workplace simulation.
+
+```bash
+python -m soft_skills_lab capstone member-verification-launch
+python -m soft_skills_lab capstone member-verification-launch --launch-decision monitor-and-launch
+python -m soft_skills_lab capstone member-verification-launch --launch-decision delay-for-regression
+python -m soft_skills_lab capstone-step member-verification-launch --at T14
+python -m soft_skills_lab capstone-evidence member-verification-launch
+python -m soft_skills_lab capstone-trust member-verification-launch
+python -m soft_skills_lab capstone-requirements member-verification-launch
+python -m soft_skills_lab capstone-decisions member-verification-launch
+python -m soft_skills_lab capstone-judgment member-verification-launch
+```
+
+The two launch choices expose a bounded judgment tradeoff rather than rank paths. Reports keep project outcome, professional behavior, and trust evidence distinct; no aggregate professionalism score is calculated.
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -467,9 +485,9 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 21. **Trust and Reputation** (implemented)
 22. **Leadership Without Authority** (implemented)
 23. **Professional Judgment** (implemented)
-24. End-to-End Workplace Simulation
+24. **End-to-End Workplace Simulation** (implemented)
 
-Later chapters are a roadmap, not yet implemented.
+**Volume I is complete: all Chapters 0–24 are implemented.**
 
 ## Limits and responsible use
 

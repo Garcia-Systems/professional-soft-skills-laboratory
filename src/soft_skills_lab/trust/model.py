@@ -282,6 +282,7 @@ class TrustDimension(Enum):
     FEEDBACK_RESPONSIVENESS = "feedback-responsiveness"
     INCIDENT_COMMUNICATION = "incident-communication"
     DECISION_CREDIBILITY = "decision-credibility"
+    CROSS_TEAM_COORDINATION = "cross-team-coordination"
 
 
 class TrustState(Enum):
