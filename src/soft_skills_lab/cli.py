@@ -3,7 +3,8 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_listening_response, evaluate_manager_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_interview_response, evaluate_listening_response, evaluate_manager_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.scenarios.interviews import get_answer, get_question, select_story
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -114,6 +115,14 @@ def build_parser() -> argparse.ArgumentParser:
     checkpoint = commands.add_parser("checkpoint", help="inspect a simulated performance checkpoint")
     checkpoint.add_argument("scenario_id")
     checkpoint.add_argument("--day", required=True, type=int)
+    iq = commands.add_parser("interview-question", help="inspect an authored interview evaluation need")
+    iq.add_argument("question_id")
+    ia = commands.add_parser("interview-answer", help="inspect structured answer evidence")
+    ia.add_argument("question_id"); ia.add_argument("response_id")
+    fu = commands.add_parser("interview-followup", help="inspect a deterministic follow-up")
+    fu.add_argument("question_id"); fu.add_argument("followup_id")
+    ss = commands.add_parser("story-selection", help="select evidence for an authored competency")
+    ss.add_argument("question_id")
     return parser
 
 
@@ -152,7 +161,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.performance_plan is not None:
+    if scenario.interview_question is not None:
+        results = evaluate_interview_response(scenario, response)
+    elif scenario.performance_plan is not None:
         results = evaluate_performance_response(scenario, response)
     elif scenario.work_impact is not None:
         results = evaluate_personal_capacity_response(scenario, response)
@@ -203,6 +214,16 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "interview-mistake":
+        headings = ("DIRECT", "EVIDENCE", "OWNERSHIP", "TRUTH", "LEARNING")
+        ids = ("answers-question-directly", "uses-specific-evidence", "states-ownership-accurately", "preserves-truth", "shows-learning-evidence")
+        lines = [f"{'PATH':29} " + " ".join(f"{x:11}" for x in headings)]
+        scenario = get_scenario(scenario_id)
+        for response in list_responses(scenario_id):
+            values = {x.criterion.criterion_id: x.outcome.value for x in evaluate_interview_response(scenario, response)}
+            lines.append(f"{response.response_id:29} " + " ".join(f"{values[x]:11}" for x in ids))
+        lines.append("\nDimensions remain separate; no interview-confidence or personality score is calculated.")
+        return "\n".join(lines)
     if scenario_id == "communication-visibility":
         headings = ("EVIDENCE", "EXPECTATIONS", "MEASUREMENT", "ACTION", "CHECKPOINTS")
         dimensions = {
@@ -965,6 +986,33 @@ def _checkpoint_text(scenario_id: str, day: int) -> str:
         "", "MANAGER FEEDBACK", checkpoint.manager_feedback, "", "EMPLOYEE RESPONSE", checkpoint.employee_response,
         "", "NEXT ACTIONS", *(f"- {x}" for x in checkpoint.next_actions)))
 
+def _interview_question_text(question_id: str) -> str:
+    question = get_question(question_id)
+    lines = ["QUESTION", question.prompt, "", "LIKELY EVALUATION AREAS", *(f"- {x}" for x in question.competencies),
+             "", "USEFUL EVIDENCE", *(f"- {x}" for x in question.useful_evidence), "", "COMMON RISKS"]
+    lines.extend(f"- {x}" for x in question.common_risks or ("None authored.",))
+    return "\n".join(lines)
+
+def _interview_answer_text(question_id: str, response_id: str) -> str:
+    answer = get_answer(question_id, response_id)
+    fields = (("CONTEXT", answer.context), ("OWNED ACTION", answer.responsibility), ("OUTCOME", answer.outcome),
+              ("RECOVERY", answer.recovery), ("LEARNING ACTION", answer.learning_action))
+    lines=[]
+    for heading,value in fields:
+        if value: lines.extend((heading,value,""))
+    lines.extend(("LATER EVIDENCE", *(f"- {x}" for x in answer.later_evidence or ("None.",)), "", "UNSUPPORTED CLAIMS", *(f"- {x}" for x in answer.unsupported_claims or ("None.",))))
+    return "\n".join(lines)
+
+def _interview_followup_text(question_id: str, followup_id: str) -> str:
+    question=get_question(question_id)
+    item=next((x for x in question.follow_ups if x.followup_id == followup_id),None)
+    if item is None: raise KeyError(f"unknown follow-up for {question_id}: {followup_id}")
+    return "\n".join(("FOLLOW-UP",item.prompt,"","CONSISTENT EVIDENCE",*(f"- {x}" for x in item.expected_facts)))
+
+def _story_selection_text(question_id: str) -> str:
+    item=select_story(question_id)
+    return "\n".join(("SELECTED EXPERIENCE",item.experience_id,"","WHY RELEVANT",*(f"- {x}" for x in item.competencies)))
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -1052,6 +1100,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _performance_evidence_text(args.scenario_id)
         elif args.command == "checkpoint":
             output = _checkpoint_text(args.scenario_id, args.day)
+        elif args.command == "interview-question":
+            output = _interview_question_text(args.question_id)
+        elif args.command == "interview-answer":
+            output = _interview_answer_text(args.question_id, args.response_id)
+        elif args.command == "interview-followup":
+            output = _interview_followup_text(args.question_id, args.followup_id)
+        elif args.command == "story-selection":
+            output = _story_selection_text(args.question_id)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

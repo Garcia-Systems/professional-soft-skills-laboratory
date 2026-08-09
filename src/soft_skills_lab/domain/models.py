@@ -838,6 +838,70 @@ class ExplanationContext:
 
 
 @dataclass(frozen=True)
+class InterviewFollowUp:
+    followup_id: str
+    prompt: str
+    expected_facts: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class InterviewQuestion:
+    """Authored evaluation need, not a natural-language question classifier."""
+
+    question_id: str
+    prompt: str
+    competencies: tuple[str, ...]
+    useful_evidence: tuple[str, ...]
+    common_risks: tuple[str, ...]
+    follow_ups: tuple[InterviewFollowUp, ...] = ()
+
+
+@dataclass(frozen=True)
+class ExperienceEvidence:
+    """Small reusable factual record for selecting an interview story."""
+
+    experience_id: str
+    context: str
+    actors: tuple[str, ...]
+    facts: tuple[str, ...]
+    actor_ownership: tuple[str, ...]
+    team_contribution: tuple[str, ...]
+    actions: tuple[str, ...]
+    outcomes: tuple[str, ...]
+    learned_behavior: tuple[str, ...] = ()
+    supported_metrics: tuple[str, ...] = ()
+    privacy_boundaries: tuple[str, ...] = ()
+    competencies: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class InterviewAnswer:
+    """Explicit semantics attached to the shared ProfessionalResponse."""
+
+    question_id: str
+    experience_id: str | None = None
+    context: str | None = None
+    responsibility: str | None = None
+    actions: tuple[str, ...] = ()
+    reasoning: tuple[str, ...] = ()
+    outcome: str | None = None
+    recovery: str | None = None
+    evidence: tuple[str, ...] = ()
+    team_contribution: tuple[str, ...] = ()
+    learning_action: str | None = None
+    later_evidence: tuple[str, ...] = ()
+    uncertainty: tuple[str, ...] = ()
+    irrelevant_detail: tuple[str, ...] = ()
+    unsupported_claims: tuple[str, ...] = ()
+    supported_metrics: tuple[str, ...] = ()
+    ownership_claim: str | None = None
+    followup_ownership_claims: tuple[tuple[str, str], ...] = ()
+    answers_directly: bool = False
+    ownership_accurate: bool = False
+    privacy_preserved: bool = True
+
+
+@dataclass(frozen=True)
 class WorkplaceScenario:
     scenario_id: str
     title: str
@@ -866,6 +930,8 @@ class WorkplaceScenario:
     incident_audiences: tuple[tuple[str, tuple[str, ...]], ...] = ()
     work_impact: WorkImpactContext | None = None
     performance_plan: ImprovementPlan | None = None
+    interview_question: InterviewQuestion | None = None
+    experience_evidence: tuple[ExperienceEvidence, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1031,6 +1097,7 @@ class ProfessionalResponse:
     tracks_evidence_over_time: bool = False
     preserves_plan_scope: bool = False
     demonstrates_plan_improvement: bool = False
+    interview_answer: InterviewAnswer | None = None
 
 
 @dataclass(frozen=True)

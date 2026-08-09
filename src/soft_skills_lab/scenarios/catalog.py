@@ -44,6 +44,7 @@ from soft_skills_lab.scenarios.requirements import REQUIREMENT_SCENARIOS
 from soft_skills_lab.scenarios.incidents import SCENARIOS as INCIDENT_SCENARIOS
 from soft_skills_lab.scenarios.personal_capacity import SCENARIOS as PERSONAL_CAPACITY_SCENARIOS
 from soft_skills_lab.scenarios.performance import SCENARIOS as PERFORMANCE_SCENARIOS
+from soft_skills_lab.scenarios.interviews import SCENARIOS as INTERVIEW_SCENARIOS
 
 PRODUCTION_INCIDENT = WorkplaceScenario(
     scenario_id="production-incident",
@@ -142,6 +143,7 @@ SCENARIOS.update(REQUIREMENT_SCENARIOS)
 SCENARIOS.update(INCIDENT_SCENARIOS)
 SCENARIOS.update(PERSONAL_CAPACITY_SCENARIOS)
 SCENARIOS.update(PERFORMANCE_SCENARIOS)
+SCENARIOS.update(INTERVIEW_SCENARIOS)
 
 
 def get_scenario(scenario_id: str) -> WorkplaceScenario:
