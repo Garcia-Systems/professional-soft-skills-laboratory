@@ -169,6 +169,22 @@ python -m soft_skills_lab evaluate unavoidable-outcome evidence-bounded
 python -m soft_skills_lab learning responsibility-follow-up
 ```
 
+Practice Chapter 9's evidence-based disagreement and decision ownership:
+
+```bash
+python -m soft_skills_lab scenario adapter-boundary
+python -m soft_skills_lab evaluate adapter-boundary evidence-based-disagreement
+python -m soft_skills_lab evaluate adapter-boundary disagree-and-commit
+python -m soft_skills_lab compare adapter-boundary
+python -m soft_skills_lab decision adapter-boundary
+python -m soft_skills_lab evaluate reporting-deadline scope-reduction
+python -m soft_skills_lab evaluate code-review-preference name-preference
+python -m soft_skills_lab evaluate manager-correct update-position
+python -m soft_skills_lab evaluate cache-strategy prototype
+python -m soft_skills_lab evaluate sensitive-logging escalate
+python -m soft_skills_lab disagreement-trust
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -182,7 +198,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 6. **Saying “I Don’t Know” Professionally** (implemented)
 7. **Receiving Feedback Without Defensiveness** (implemented)
 8. **Taking Responsibility** (implemented)
-9. Disagreeing Professionally
+9. **Disagreeing Professionally** (implemented)
 10. Conflict and De-escalation
 11. Working With Managers
 12. Working With Teammates

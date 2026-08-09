@@ -93,6 +93,39 @@ class ResponsibilityMap:
     preventive_action: tuple[str, ...] = ()
 
 
+class DecisionIssueKind(Enum):
+    """The decision significance of a disputed point, authored rather than inferred."""
+
+    CORRECTNESS = "correctness issue"
+    MAINTAINABILITY = "maintainability tradeoff"
+    CONVENTION = "convention"
+    PREFERENCE = "personal preference"
+    MATERIAL_RISK = "material risk"
+
+
+@dataclass(frozen=True)
+class DecisionAlternative:
+    name: str
+    evidence: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class DecisionContext:
+    """A compact, inspectable decision boundary—not a decision-management system."""
+
+    decision: str
+    owner: str
+    contributors: tuple[str, ...]
+    shared_objective: str
+    alternatives: tuple[DecisionAlternative, ...]
+    constraints: tuple[str, ...] = ()
+    unresolved_risks: tuple[str, ...] = ()
+    issue_kind: DecisionIssueKind = DecisionIssueKind.MAINTAINABILITY
+    final_choice: str | None = None
+    rationale: str | None = None
+    reversible: bool = True
+
+
 @dataclass(frozen=True)
 class ProfessionalFeedback:
     """Scenario-authored decomposition; it does not parse arbitrary prose."""
@@ -342,6 +375,7 @@ class WorkplaceScenario:
     feedback: ProfessionalFeedback | None = None
     action_plan: BehavioralActionPlan | None = None
     responsibility_map: ResponsibilityMap | None = None
+    decision_context: DecisionContext | None = None
 
 
 @dataclass(frozen=True)
@@ -417,6 +451,16 @@ class ProfessionalResponse:
     identifies_preventive_action: bool = False
     acknowledges_impact: bool = False
     self_condemnation: bool = False
+    identifies_shared_objective: bool = False
+    states_specific_disagreement: bool = False
+    decision_relevant_evidence: tuple[str, ...] = ()
+    personalizes_disagreement: bool = False
+    distinguishes_preference_from_defect: bool = False
+    constructive_alternative: str | None = None
+    respects_decision_ownership: bool = False
+    updates_position_with_evidence: bool = False
+    escalates_material_risk: bool = False
+    repeats_resolved_argument: bool = False
 
 
 @dataclass(frozen=True)
