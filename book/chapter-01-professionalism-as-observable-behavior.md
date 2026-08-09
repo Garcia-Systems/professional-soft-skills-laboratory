@@ -1,5 +1,7 @@
 # Chapter 1: Professionalism as Observable Behavior
 
+![Chapter 1 — Professionalism as Observable Behavior](../images/chapters/chapter-01-professionalism-as-observable-behavior.png)
+
 > **Key principle:** Professionalism is accumulated evidence about how someone handles responsibilities.
 
 ## Educational question

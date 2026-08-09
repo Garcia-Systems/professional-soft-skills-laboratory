@@ -1,5 +1,7 @@
 # Chapter 21: Trust and Reputation
 
+![Chapter 21 — Trust and Reputation](../images/chapters/chapter-21-trust-and-reputation.png)
+
 ## Educational question
 
 > What repeated evidence causes other people to change how much they rely on you?

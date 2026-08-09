@@ -1,5 +1,7 @@
 # Chapter 23 — Professional Judgment
 
+![Chapter 23 — Professional Judgment](../images/chapters/chapter-23-professional-judgment.png)
+
 ## Educational question
 
 > How do you decide what professional behavior fits when asking, acting, waiting, escalating, complying, or refusing could all be reasonable in different circumstances?

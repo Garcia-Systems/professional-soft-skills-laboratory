@@ -1,5 +1,7 @@
 # Chapter 13 — Working With Business Stakeholders
 
+![Chapter 13 — Working With Business Stakeholders](../images/chapters/chapter-13-working-with-business-stakeholders.png)
+
 ## Educational question
 
 > How do you connect technical decisions to what the business is actually trying to accomplish?

@@ -1,5 +1,7 @@
 # Chapter 20: Written Professional Communication
 
+![Chapter 20 — Written Professional Communication](../images/chapters/chapter-20-written-professional-communication.png)
+
 ## Educational question
 
 > How do you write messages that another person can understand and act on without having to reconstruct the missing context?

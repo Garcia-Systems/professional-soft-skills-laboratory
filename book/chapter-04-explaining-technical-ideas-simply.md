@@ -1,5 +1,7 @@
 # Chapter 4: Explaining Technical Ideas Simply
 
+![Chapter 4 — Explaining Technical Ideas Simply](../images/chapters/chapter-04-explaining-technical-ideas-simply.png)
+
 ## Educational question
 
 > How do you preserve technical truth while explaining only the detail another person needs?

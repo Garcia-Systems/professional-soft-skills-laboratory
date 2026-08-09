@@ -1,5 +1,7 @@
 # Chapter 18: Interview Communication
 
+![Chapter 18 — Interview Communication](../images/chapters/chapter-18-interview-communication.png)
+
 ## Educational question
 
 > How do you make your experience easy for an interviewer to evaluate without bluffing, rambling, underselling yourself, or turning every answer into a speech?

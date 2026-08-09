@@ -1,5 +1,7 @@
 # Chapter 3: Asking Good Questions
 
+![Chapter 3 — Asking Good Questions](../images/chapters/chapter-03-asking-good-questions.png)
+
 ## Educational question
 
 > How do you ask for information without outsourcing your thinking to someone else?

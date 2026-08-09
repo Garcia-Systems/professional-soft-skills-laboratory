@@ -1,5 +1,7 @@
 # Chapter 2: Listening Before Responding
 
+![Chapter 2 — Listening Before Responding](../images/chapters/chapter-02-listening-before-responding.png)
+
 > **Key principle:** Listening is not waiting for your turn to speak. It is reducing the gap between what was communicated and what you think was communicated.
 
 ## Educational question

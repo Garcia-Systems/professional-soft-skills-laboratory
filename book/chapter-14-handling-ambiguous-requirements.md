@@ -1,5 +1,7 @@
 # Chapter 14: Handling Ambiguous Requirements
 
+![Chapter 14 — Handling Ambiguous Requirements](../images/chapters/chapter-14-handling-ambiguous-requirements.png)
+
 ## Educational question
 
 > How do you turn “I think I know what they mean” into an explicit requirement that other people can inspect and test?

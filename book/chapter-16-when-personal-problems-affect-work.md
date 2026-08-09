@@ -1,5 +1,7 @@
 # Chapter 16: When Personal Problems Affect Work
 
+![Chapter 16 — When Personal Problems Affect Work](../images/chapters/chapter-16-when-personal-problems-affect-work.png)
+
 ## Educational question
 
 > How do you protect your privacy while still managing the professional effects of a difficult personal situation?

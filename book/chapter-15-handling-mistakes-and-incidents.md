@@ -1,5 +1,7 @@
 # Chapter 15: Handling Mistakes and Incidents
 
+![Chapter 15 — Handling Mistakes and Incidents](../images/chapters/chapter-15-handling-mistakes-and-incidents.png)
+
 ## Educational question
 
 > What professional behaviors matter most when something has already gone wrong?

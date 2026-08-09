@@ -1,5 +1,7 @@
 # Chapter 12 — Working With Teammates
 
+![Chapter 12 — Working With Teammates](../images/chapters/chapter-12-working-with-teammates.png)
+
 ## Educational question
 
 > How do you make work move reliably between peers without dropping dependencies or taking over each other's responsibilities?

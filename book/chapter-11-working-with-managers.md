@@ -1,5 +1,7 @@
 # Chapter 11 — Working With Managers
 
+![Chapter 11 — Working With Managers](../images/chapters/chapter-11-working-with-managers.png)
+
 ## Educational question
 
 > How do you give a manager enough visibility to trust your work without requiring them to manage every detail?

@@ -1,5 +1,7 @@
 # Chapter 9: Disagreeing Professionally
 
+![Chapter 9 — Disagreeing Professionally](../images/chapters/chapter-09-disagreeing-professionally.png)
+
 ## Educational question
 
 > How do you say “I think we should do something different” without turning the conversation into a contest?

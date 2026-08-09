@@ -1,5 +1,7 @@
 # Chapter 22 — Leadership Without Authority
 
+![Chapter 22 — Leadership Without Authority](../images/chapters/chapter-22-leadership-without-authority.png)
+
 ## Educational question
 
 > How do you help people coordinate around a shared outcome when none of them report to you?

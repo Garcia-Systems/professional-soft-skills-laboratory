@@ -1,5 +1,7 @@
 # Chapter 24: End-to-End Workplace Simulation
 
+![Chapter 24 — End-to-End Workplace Simulation](../images/chapters/chapter-24-end-to-end-workplace-simulation.png)
+
 ## Educational question
 
 > What happens when all of the professional behaviors in this volume interact across one realistic project?
