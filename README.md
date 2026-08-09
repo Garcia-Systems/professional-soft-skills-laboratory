@@ -411,6 +411,19 @@ python -m soft_skills_lab scenario trust-degradation
 python -m soft_skills_lab scenario trust-rebuilding
 ```
 
+Practice Chapter 22's coordination without authority:
+
+```bash
+python -m soft_skills_lab scenario verification-launch
+python -m soft_skills_lab compare verification-launch
+python -m soft_skills_lab leadership verification-launch
+python -m soft_skills_lab coordination-map verification-launch
+python -m soft_skills_lab evaluate verification-launch coordinate-without-authority
+python -m soft_skills_lab evaluate verification-launch facilitate-and-recommend
+python -m soft_skills_lab evaluate cross-team-api negotiate-checkpoint
+python -m soft_skills_lab evaluate leader-wrong update-recommendation
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -437,7 +450,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 19. **Meetings and Presence** (implemented)
 20. **Written Professional Communication** (implemented)
 21. **Trust and Reputation** (implemented)
-22. Leadership Without Authority
+22. **Leadership Without Authority** (implemented)
 23. Professional Judgment
 24. End-to-End Workplace Simulation
 

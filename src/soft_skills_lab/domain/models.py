@@ -419,6 +419,50 @@ class PeerCollaboration:
 
 
 @dataclass(frozen=True)
+class CoordinationDependency:
+    """An authored cross-owner dependency, not a generated project plan."""
+
+    item: str
+    owner: str
+    timing: str
+    depends_on: tuple[str, ...] = ()
+    blocks: tuple[str, ...] = ()
+    may_affect: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class CoordinationAction:
+    """A proposed contribution whose acceptance is explicit rather than inferred."""
+
+    actor: str
+    action_type: str
+    target_issue: str
+    requested_contribution: str | None = None
+    proposed_owner: str | None = None
+    evidence_basis: tuple[str, ...] = ()
+    decision_effect: str | None = None
+    accepted_by_owner: bool = False
+
+
+@dataclass(frozen=True)
+class InfluenceContext:
+    """Small shared-state view for coordination among independent owners."""
+
+    objective: str
+    initiator: str
+    participants: tuple[str, ...]
+    formal_decision_owners: tuple[tuple[str, tuple[str, ...]], ...]
+    contributors: tuple[str, ...]
+    dependencies: tuple[CoordinationDependency, ...]
+    unresolved_issues: tuple[str, ...]
+    constraints: tuple[str, ...]
+    available_evidence: tuple[str, ...]
+    coordination_gaps: tuple[str, ...]
+    actions: tuple[CoordinationAction, ...] = ()
+    influence_evidence: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class StakeholderRequest:
     """Scenario-authored request decomposition, not a parsed specification."""
 
@@ -1069,6 +1113,7 @@ class WorkplaceScenario:
     experience_evidence: tuple[ExperienceEvidence, ...] = ()
     meeting_context: MeetingContext | None = None
     written_artifacts: tuple[WrittenMessage, ...] = ()
+    influence_context: InfluenceContext | None = None
 
 
 @dataclass(frozen=True)
@@ -1246,6 +1291,19 @@ class ProfessionalResponse:
     async_recommended: bool = False
     attention_failure: bool = False
     written_message: WrittenMessage | None = None
+    shared_objective_clarified: bool = False
+    dependency_map_created: bool = False
+    ownership_confirmed: bool = False
+    peer_commitment_assigned_without_authority: bool = False
+    ownership_taken_over: bool = False
+    ownership_invited: bool = False
+    peer_commitment_negotiated: bool = False
+    evidence_based_recommendation: bool = False
+    false_consensus_claimed: bool = False
+    coordinates_before_escalating: bool = False
+    missing_decision_owner_identified: bool = False
+    coordination_state_updated: bool = False
+    contributors_credited_accurately: bool = False
 
 
 @dataclass(frozen=True)

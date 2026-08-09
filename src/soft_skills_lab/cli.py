@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_interview_response, evaluate_listening_response, evaluate_manager_response, evaluate_meeting_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evaluate_written_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_interview_response, evaluate_leadership_response, evaluate_listening_response, evaluate_manager_response, evaluate_meeting_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evaluate_written_response, evidence_for_commitment
 from soft_skills_lab.scenarios.writing import ARTIFACTS
 from soft_skills_lab.scenarios.interviews import get_answer, get_question, select_story
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
@@ -136,6 +136,10 @@ def build_parser() -> argparse.ArgumentParser:
     trust_explain.add_argument("scenario_id"); trust_explain.add_argument("dimension")
     trust_view = commands.add_parser("trust-view", help="inspect only evidence available to one observer")
     trust_view.add_argument("scenario_id"); trust_view.add_argument("--observer", required=True)
+    leadership = commands.add_parser("leadership", help="inspect shared objective and authority boundaries")
+    leadership.add_argument("scenario_id")
+    coordination = commands.add_parser("coordination-map", help="inspect authored cross-owner dependencies")
+    coordination.add_argument("scenario_id")
     return parser
 
 
@@ -174,7 +178,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if response.written_message is not None:
+    if scenario.influence_context is not None:
+        results = evaluate_leadership_response(scenario, response)
+    elif response.written_message is not None:
         results = evaluate_written_response(scenario, response)
     elif scenario.meeting_context is not None:
         results = evaluate_meeting_response(scenario, response)
@@ -231,6 +237,22 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "verification-launch":
+        headings = ("OBJECTIVE", "OWNERSHIP", "DEPENDENCIES", "EVIDENCE", "ESCALATION")
+        dimensions = {
+            "command-peers": ("PARTIAL", "FAIL", "PARTIAL", "PARTIAL", "FAIL"),
+            "do-everything": ("PASS", "FAIL", "PARTIAL", "PARTIAL", "FAIL"),
+            "status-forwarder": ("PARTIAL", "PASS", "PARTIAL", "PARTIAL", "PARTIAL"),
+            "meeting-without-structure": ("PARTIAL", "PARTIAL", "FAIL", "FAIL", "PARTIAL"),
+            "escalate-everything": ("PASS", "PARTIAL", "PASS", "PARTIAL", "FAIL"),
+            "manipulate-consensus": ("PARTIAL", "FAIL", "PARTIAL", "FAIL", "FAIL"),
+            "coordinate-without-authority": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+            "facilitate-and-recommend": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':31} " + " ".join(f"{h:13}" for h in headings)]
+        lines.extend(f"{path:31} " + " ".join(f"{value:13}" for value in values) for path, values in dimensions.items())
+        lines.append("\nDimensions remain separate; no leadership, charisma, or obedience score is calculated.")
+        return "\n".join(lines)
     if scenario_id == "deployment-risk":
         headings=("CONTEXT","STATE","EVIDENCE","REQUEST","FOLLOW-UP")
         ids=("provides-standalone-context","states-current-state","uses-decision-relevant-evidence","makes-request-explicit","establishes-next-update")
@@ -1119,6 +1141,37 @@ def _trust_explain_text(scenario_id: str, value: str) -> str:
     lines += [f"{event.polarity.value} {event.time}: {event.observable_behavior} [{event.provenance.value}]" for event in history.for_dimension(dimension)] or ["- No evidence recorded."]
     return "\n".join(lines)
 
+def _leadership_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).influence_context
+    if context is None:
+        raise ValueError("leadership context unavailable")
+    lines = ["SHARED OBJECTIVE", context.objective, "", "PARTICIPANTS"]
+    lines.extend(context.participants)
+    lines.extend(("", "OWNERSHIP"))
+    for owner, rights in context.formal_decision_owners:
+        lines.extend(("", f"{owner}:", "; ".join(rights) + "."))
+    lines.extend(("", "CURRENT DEPENDENCIES"))
+    for dependency in context.dependencies:
+        relation = dependency.depends_on or dependency.blocks or dependency.may_affect
+        lines.append(f"{dependency.owner} — {dependency.item}: {dependency.timing}; " + (", ".join(relation) if relation else "no predecessor"))
+    lines.extend(("", "CURRENT COORDINATION GAP"))
+    lines.extend(context.coordination_gaps)
+    lines.extend(("", "AUTHORITY BOUNDARY", "Alex may coordinate and recommend; other owners must accept their commitments and retain their decisions."))
+    return "\n".join(lines)
+
+def _coordination_map_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).influence_context
+    if context is None:
+        raise ValueError("coordination map unavailable")
+    lines = []
+    for dependency in context.dependencies:
+        lines.extend((dependency.item.upper(), f"Owner: {dependency.owner}", dependency.timing))
+        if dependency.depends_on: lines.append("Depends on: " + "; ".join(dependency.depends_on))
+        if dependency.blocks: lines.append("Blocks: " + "; ".join(dependency.blocks))
+        if dependency.may_affect: lines.append("May affect: " + "; ".join(dependency.may_affect))
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -1230,6 +1283,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _trust_explain_text(args.scenario_id, args.dimension)
         elif args.command == "trust-view":
             output = _trust_history_text(args.scenario_id, args.observer)
+        elif args.command == "leadership":
+            output = _leadership_text(args.scenario_id)
+        elif args.command == "coordination-map":
+            output = _coordination_map_text(args.scenario_id)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:
