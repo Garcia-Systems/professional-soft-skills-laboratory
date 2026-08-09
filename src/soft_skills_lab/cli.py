@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -19,6 +19,8 @@ from soft_skills_lab.scenarios.responsibility import PRIMARY_RESPONSE_IDS as RES
 from soft_skills_lab.trust import RESPONSIBILITY_LEARNING_EVENTS
 from soft_skills_lab.scenarios.managers import PROJECT_TIMELINE
 from soft_skills_lab.trust import MANAGER_AUTONOMY_EVENTS
+from soft_skills_lab.scenarios.collaboration import TIMELINE as COLLABORATION_TIMELINE
+from soft_skills_lab.trust import COLLABORATION_EVENTS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -69,6 +71,11 @@ def build_parser() -> argparse.ArgumentParser:
     visibility = commands.add_parser("visibility", help="inspect contextual visibility thresholds")
     visibility.add_argument("scenario_id")
     commands.add_parser("manager-trust", help="show manager trust and autonomy evidence")
+    handoff = commands.add_parser("handoff", help="inspect an explicit peer handoff")
+    handoff.add_argument("scenario_id")
+    ownership = commands.add_parser("ownership", help="inspect peer ownership and shared interfaces")
+    ownership.add_argument("scenario_id")
+    commands.add_parser("collaboration-trust", help="show peer dependency trust evidence")
     return parser
 
 
@@ -91,6 +98,9 @@ def _scenario_text(scenario_id: str) -> str:
     elif scenario_id == "project-autonomy":
         lines.append("\nTimeline:")
         lines.extend(f"- T{event.point}: {event.description}" for event in PROJECT_TIMELINE)
+    elif scenario_id == "verification-integration":
+        lines.append("\nTimeline:")
+        lines.extend(f"- T{event.point}: {event.description}" for event in COLLABORATION_TIMELINE)
     lines.append("\nReference responses:")
     lines.extend(f"- {response.response_id}: {response.label}" for response in list_responses(scenario_id))
     return "\n".join(lines)
@@ -100,7 +110,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.working_agreement is not None:
+    if scenario.peer_collaboration is not None:
+        results = evaluate_collaboration_response(scenario, response)
+    elif scenario.working_agreement is not None:
         results = evaluate_manager_response(scenario, response)
     elif scenario.conflict_state is not None:
         results = evaluate_conflict_response(scenario, response)
@@ -139,6 +151,21 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "verification-integration":
+        headings = ("HANDOFF", "CONTEXT", "OWNERSHIP", "DEPENDENCY", "LOOP")
+        dimensions = {
+            "silent-handoff": ("FAIL", "FAIL", "PASS", "FAIL", "FAIL"),
+            "throw-over-wall": ("PASS", "FAIL", "PASS", "PARTIAL", "FAIL"),
+            "over-help": ("PARTIAL", "PARTIAL", "FAIL", "PASS", "PARTIAL"),
+            "wait-for-them-to-ask": ("FAIL", "FAIL", "PASS", "FAIL", "FAIL"),
+            "dependency-blame": ("FAIL", "FAIL", "PARTIAL", "FAIL", "FAIL"),
+            "coordinated-handoff": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+            "coordinated-help": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':25} " + " ".join(f"{item:12}" for item in headings)]
+        lines.extend(f"{path:25} " + " ".join(f"{item:12}" for item in outcomes) for path, outcomes in dimensions.items())
+        lines.append("\nDimensions remain separate; this is not a teamwork, friendliness, or availability score.")
+        return "\n".join(lines)
     if scenario_id == "project-autonomy":
         headings = ("AUTONOMY", "VISIBILITY", "THRESHOLDS", "RECOMMENDATION", "FOLLOW-UP")
         dimensions = {
@@ -543,6 +570,43 @@ def _manager_trust_text() -> str:
     return "\n".join(lines)
 
 
+def _handoff_text(scenario_id: str) -> str:
+    collaboration = get_scenario(scenario_id).peer_collaboration
+    if collaboration is None or collaboration.handoff is None:
+        raise KeyError(f"handoff inspection unavailable for scenario: {scenario_id}")
+    item = collaboration.handoff
+    lines = ["HANDOFF", item.title, "", "SENDER", item.sender, "", "RECEIVER", item.receiver,
+             "", "ARTIFACT", item.artifact, "", "DEPENDENCY", item.dependency_served,
+             "", "CURRENT STATE", f"{item.state.value} BUT NOT YET ACKNOWLEDGED", "", "CONTRACT"]
+    lines.extend(f"- {value}" for value in item.agreed_contract)
+    lines.extend(("", "RECEIVER NEEDS"))
+    lines.extend(f"- {value}" for value in item.required_context)
+    lines.extend(("", "LOOP CLOSES WHEN", item.acceptance_condition))
+    return "\n".join(lines)
+
+
+def _ownership_text(scenario_id: str) -> str:
+    collaboration = get_scenario(scenario_id).peer_collaboration
+    if collaboration is None:
+        raise KeyError(f"peer ownership inspection unavailable for scenario: {scenario_id}")
+    lines = []
+    for owner, items in collaboration.ownership.owners:
+        lines.extend((f"{owner.upper()} OWNS", *(f"- {item}" for item in items), ""))
+    lines.extend(("SHARED", *(f"- {item}" for item in collaboration.ownership.shared), "", "NOT IMPLIED",
+                  *(f"- {item}" for item in collaboration.ownership.not_implied)))
+    return "\n".join(lines)
+
+
+def _collaboration_trust_text() -> str:
+    trust = ProfessionalTrust()
+    lines = ["PEER COLLABORATION TRUST EVIDENCE"]
+    for event in COLLABORATION_EVENTS:
+        trust = trust.record(event)
+        lines.append(f"- {event.kind.label} ({event.kind.weight:+d}): {event.detail}")
+    lines.extend(("", f"Evidence balance: {trust.balance}", "Reliable handoffs—not sociability or constant availability—create dependency evidence."))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -586,6 +650,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _visibility_text(args.scenario_id)
         elif args.command == "manager-trust":
             output = _manager_trust_text()
+        elif args.command == "handoff":
+            output = _handoff_text(args.scenario_id)
+        elif args.command == "ownership":
+            output = _ownership_text(args.scenario_id)
+        elif args.command == "collaboration-trust":
+            output = _collaboration_trust_text()
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

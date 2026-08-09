@@ -38,6 +38,7 @@ from soft_skills_lab.scenarios.conflict import (
     MANAGER_TRADEOFF_RESPONSES, PUBLIC_CONFLICT, PUBLIC_RESPONSES, RELEASE_RESPONSES, RELEASE_VALIDATION,
 )
 from soft_skills_lab.scenarios.managers import MANAGER_SCENARIOS
+from soft_skills_lab.scenarios.collaboration import COLLABORATION_SCENARIOS
 
 PRODUCTION_INCIDENT = WorkplaceScenario(
     scenario_id="production-incident",
@@ -130,6 +131,7 @@ SCENARIOS = {
     PUBLIC_CONFLICT.scenario_id: (PUBLIC_CONFLICT, PUBLIC_RESPONSES),
 }
 SCENARIOS.update(MANAGER_SCENARIOS)
+SCENARIOS.update(COLLABORATION_SCENARIOS)
 
 
 def get_scenario(scenario_id: str) -> WorkplaceScenario:

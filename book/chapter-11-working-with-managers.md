@@ -113,4 +113,4 @@ When Morgan says, “I need earlier visibility,” a strong verbal response is o
 
 ## Limits
 
-The laboratory authors semantics explicitly and does not judge arbitrary prose, diagnose managers, build an HR system, or supply legal analysis. Thresholds belong to each scenario. Chapter 12 is intentionally not implemented.
+The laboratory authors semantics explicitly and does not judge arbitrary prose, diagnose managers, build an HR system, or supply legal analysis. Thresholds belong to each scenario. Chapter 12 applies these boundaries horizontally between peers.
