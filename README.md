@@ -59,6 +59,23 @@ python -m soft_skills_lab scenario teammate-contract
 python -m soft_skills_lab scenario stakeholder-search
 ```
 
+Explore Chapter 3's decision-relevant questions and deterministic answers:
+
+```bash
+python -m soft_skills_lab scenario report-export
+python -m soft_skills_lab unknowns report-export
+python -m soft_skills_lab evaluate report-export no-questions
+python -m soft_skills_lab evaluate report-export question-dump
+python -m soft_skills_lab evaluate report-export ask-before-looking
+python -m soft_skills_lab evaluate report-export leading-question
+python -m soft_skills_lab evaluate report-export focused-questions
+python -m soft_skills_lab compare report-export
+python -m soft_skills_lab answer report-export
+python -m soft_skills_lab scenario deployment-failure
+python -m soft_skills_lab evaluate deployment-failure professional-question
+python -m soft_skills_lab evaluate authorization-risk immediate-escalation
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -66,7 +83,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 0. **The Executable Professional** (implemented)
 1. **Professionalism as Observable Behavior** (implemented)
 2. **Listening Before Responding** (implemented)
-3. Asking Good Questions
+3. **Asking Good Questions** (implemented)
 4. Explaining Technical Ideas Simply
 5. Giving Status Updates
 6. Saying “I Don’t Know” Professionally
