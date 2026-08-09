@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_interview_response, evaluate_listening_response, evaluate_manager_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_interview_response, evaluate_listening_response, evaluate_manager_response, evaluate_meeting_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios.interviews import get_answer, get_question, select_story
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
@@ -123,6 +123,10 @@ def build_parser() -> argparse.ArgumentParser:
     fu.add_argument("question_id"); fu.add_argument("followup_id")
     ss = commands.add_parser("story-selection", help="select evidence for an authored competency")
     ss.add_argument("question_id")
+    for name, help_text in (("meeting","inspect role preparation and purpose"),
+                            ("meeting-outcome","inspect decisions and actions"),
+                            ("meeting-flow","inspect the authored meeting flow")):
+        command=commands.add_parser(name, help=help_text); command.add_argument("scenario_id")
     return parser
 
 
@@ -161,7 +165,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.interview_question is not None:
+    if scenario.meeting_context is not None:
+        results = evaluate_meeting_response(scenario, response)
+    elif scenario.interview_question is not None:
         results = evaluate_interview_response(scenario, response)
     elif scenario.performance_plan is not None:
         results = evaluate_performance_response(scenario, response)
@@ -214,6 +220,15 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "release-readiness":
+        headings=("PREPARED","RELEVANT","RISK","PURPOSE","CLOSURE")
+        ids=("prepares-for-role","contributes-decision-relevant-information","surfaces-relevant-risk","matches-meeting-purpose","closes-meeting-loop")
+        scenario=get_scenario(scenario_id); lines=[f"{'PATH':26} "+" ".join(f"{h:10}" for h in headings)]
+        for response in list_responses(scenario_id):
+            values={x.criterion.criterion_id:x.outcome.value for x in evaluate_meeting_response(scenario,response)}
+            lines.append(f"{response.response_id:26} "+" ".join(f"{values[i]:10}" for i in ids))
+        lines.append("\nDimensions remain separate; no presence, airtime, or personality score is calculated.")
+        return "\n".join(lines)
     if scenario_id == "interview-mistake":
         headings = ("DIRECT", "EVIDENCE", "OWNERSHIP", "TRUTH", "LEARNING")
         ids = ("answers-question-directly", "uses-specific-evidence", "states-ownership-accurately", "preserves-truth", "shows-learning-evidence")
@@ -439,6 +454,31 @@ def _comparison_text(scenario_id: str) -> str:
         lines.append(f"{response_id:21} " + " ".join(f"{results[item]:12}" for item in criterion_ids))
     lines.append("\nOutcomes are shown criterion by criterion; this is not a professionalism score.")
     return "\n".join(lines)
+
+
+def _meeting_text(scenario_id: str) -> str:
+    meeting=get_scenario(scenario_id).meeting_context
+    if meeting is None: raise KeyError(f"meeting inspection unavailable for scenario: {scenario_id}")
+    lines=( ["MEETING",meeting.title,"","PURPOSE",meeting.purpose,"","DECISIONS NEEDED"]+
+            [f"- {x}" for x in meeting.decisions_needed])
+    prep=dict(meeting.role_preparation).get("Alex",()); not_needed=dict(meeting.not_required_preparation).get("Alex",())
+    lines += ["","ALEX SHOULD PREPARE"]+[f"- {x}" for x in prep]+["","ALEX DOES NOT NEED TO PREPARE"]+[f"- {x}" for x in not_needed]
+    lines += ["","DECISION OWNERS"]+[f"{owner}: {scope}" for owner,scope in meeting.decision_owners]
+    return "\n".join(lines)
+
+def _meeting_outcome_text(scenario_id: str) -> str:
+    meeting=get_scenario(scenario_id).meeting_context
+    if meeting is None or meeting.outcome is None: raise KeyError(f"meeting outcome unavailable for scenario: {scenario_id}")
+    outcome=meeting.outcome; lines=["MEETING OUTCOME"]
+    for decision in outcome.decisions: lines += ["","DECISION",decision.decision,"OWNER",decision.owner,"RATIONALE",decision.rationale,"SCOPE",decision.scope]
+    lines += ["","ACTIONS"]+[f"- {x.owner}: {x.action} by {x.due_point}" for x in outcome.actions]
+    lines += ["","UNRESOLVED"]+[f"- {x}" for x in outcome.unresolved_questions]+["","NEXT CHECKPOINT",outcome.next_checkpoint or "None"]
+    return "\n".join(lines)
+
+def _meeting_flow_text(scenario_id: str) -> str:
+    meeting=get_scenario(scenario_id).meeting_context
+    if meeting is None: raise KeyError(f"meeting flow unavailable for scenario: {scenario_id}")
+    return "\n\n".join(f"{phase}\n{state}" for phase,state in meeting.flow) if meeting.flow else "No multi-phase flow is needed for this meeting."
 
 
 def _interpretation_text(scenario_id: str) -> str:
@@ -1108,6 +1148,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _interview_followup_text(args.question_id, args.followup_id)
         elif args.command == "story-selection":
             output = _story_selection_text(args.question_id)
+        elif args.command == "meeting":
+            output = _meeting_text(args.scenario_id)
+        elif args.command == "meeting-outcome":
+            output = _meeting_outcome_text(args.scenario_id)
+        elif args.command == "meeting-flow":
+            output = _meeting_flow_text(args.scenario_id)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

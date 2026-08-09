@@ -901,6 +901,79 @@ class InterviewAnswer:
     privacy_preserved: bool = True
 
 
+class ContributionType(Enum):
+    """Authored function of a contribution; not a classifier for arbitrary speech."""
+    QUESTION = "question"
+    STATUS = "status"
+    EVIDENCE = "evidence"
+    RECOMMENDATION = "recommendation"
+    DISAGREEMENT = "disagreement"
+    SUMMARY = "summary"
+    DECISION = "decision"
+    ACTION_COMMITMENT = "action commitment"
+    CLARIFICATION = "clarification"
+
+
+@dataclass(frozen=True)
+class MeetingContribution:
+    contributor: str
+    contribution_type: ContributionType
+    agenda_item: str
+    evidence: tuple[str, ...] = ()
+    decision_relevant: bool = False
+    adds_information: bool = False
+    answers_question: bool = False
+    affects_decision: bool = False
+    repeats_established_information: bool = False
+    within_scope: bool = True
+
+
+@dataclass(frozen=True)
+class MeetingDecision:
+    decision: str
+    owner: str
+    rationale: str
+    alternatives_considered: tuple[str, ...]
+    scope: str
+    effective_point: str
+
+
+@dataclass(frozen=True)
+class ActionItem:
+    action: str
+    owner: str
+    due_point: str
+    dependency: str | None = None
+    status: str = "open"
+
+
+@dataclass(frozen=True)
+class MeetingOutcome:
+    decisions: tuple[MeetingDecision, ...] = ()
+    actions: tuple[ActionItem, ...] = ()
+    unresolved_questions: tuple[str, ...] = ()
+    next_checkpoint: str | None = None
+
+
+@dataclass(frozen=True)
+class MeetingContext:
+    meeting_id: str
+    title: str
+    purpose: str
+    participants: tuple[Participant, ...]
+    agenda_items: tuple[str, ...]
+    decisions_needed: tuple[str, ...]
+    pre_read: tuple[str, ...]
+    known_facts: tuple[str, ...]
+    unresolved_questions: tuple[str, ...]
+    decision_owners: tuple[tuple[str, str], ...]
+    time_constraint: str
+    role_preparation: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    not_required_preparation: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    outcome: MeetingOutcome | None = None
+    flow: tuple[tuple[str, str], ...] = ()
+
+
 @dataclass(frozen=True)
 class WorkplaceScenario:
     scenario_id: str
@@ -932,6 +1005,7 @@ class WorkplaceScenario:
     performance_plan: ImprovementPlan | None = None
     interview_question: InterviewQuestion | None = None
     experience_evidence: tuple[ExperienceEvidence, ...] = ()
+    meeting_context: MeetingContext | None = None
 
 
 @dataclass(frozen=True)
@@ -1098,6 +1172,16 @@ class ProfessionalResponse:
     preserves_plan_scope: bool = False
     demonstrates_plan_improvement: bool = False
     interview_answer: InterviewAnswer | None = None
+    meeting_contribution: MeetingContribution | None = None
+    meeting_prepared: bool | None = None
+    material_information_withheld: bool = False
+    meeting_purpose_matched: bool = False
+    decision_captured: bool = False
+    action_owner_captured: bool = False
+    meeting_loop_closed: bool = False
+    relevant_point_protected: bool = False
+    async_recommended: bool = False
+    attention_failure: bool = False
 
 
 @dataclass(frozen=True)

@@ -357,6 +357,23 @@ python -m soft_skills_lab evaluate interview-imperfect-outcome partial-success
 python -m soft_skills_lab story-selection influence
 ```
 
+Practice Chapter 19's purpose-driven meeting presence:
+
+```bash
+python -m soft_skills_lab scenario release-readiness
+python -m soft_skills_lab compare release-readiness
+python -m soft_skills_lab evaluate release-readiness useful-contribution
+python -m soft_skills_lab evaluate release-readiness useful-question
+python -m soft_skills_lab evaluate release-readiness summarize-and-close
+python -m soft_skills_lab meeting release-readiness
+python -m soft_skills_lab meeting-flow release-readiness
+python -m soft_skills_lab meeting-outcome release-readiness
+python -m soft_skills_lab evaluate daily-standup useful-standup
+python -m soft_skills_lab evaluate design-review purposeful-detail
+python -m soft_skills_lab evaluate meeting-interruption clarify-after-listening
+python -m soft_skills_lab evaluate deployment-success-update use-async
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -380,7 +397,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 16. **When Personal Problems Affect Work** (implemented)
 17. **Performance Feedback and PIPs** (implemented)
 18. **Interview Communication** (implemented)
-19. Meetings and Presence
+19. **Meetings and Presence** (implemented)
 20. Written Professional Communication
 21. Trust and Reputation
 22. Leadership Without Authority
