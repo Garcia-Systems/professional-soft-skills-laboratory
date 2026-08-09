@@ -75,6 +75,18 @@ class TrustEventKind(Enum):
     IMPACT_MINIMIZED = (-2, "Impact minimized")
     FALSE_RECOVERY_DECLARED = (-3, "False recovery declared")
     STAKEHOLDER_LEFT_UNINFORMED = (-2, "Stakeholder left uninformed")
+    PERSONAL_IMPACT_COMMUNICATED = (2, "Personal impact communicated before failure")
+    PRIVACY_BOUNDARY_MAINTAINED = (1, "Privacy boundary maintained")
+    REALISTIC_COMMITMENT_REVISION = (2, "Realistic commitment revision")
+    SPECIFIC_SUPPORT_REQUESTED = (1, "Specific support requested")
+    DEPENDENT_PARTY_UPDATED = (2, "Dependent party updated")
+    UNSAFE_TASK_REASSIGNED = (2, "Unsafe task reassigned")
+    RECURRING_PATTERN_ADDRESSED = (2, "Recurring pattern addressed")
+    REVISED_FOLLOW_UP_COMPLETED = (2, "Revised follow-up completed")
+    KNOWN_CAPACITY_RISK_HIDDEN = (-3, "Known capacity risk hidden")
+    UNSUPPORTED_REASSURANCE_GIVEN = (-2, "Unsupported reassurance given")
+    CRITICAL_DEPENDENCY_ABANDONED = (-3, "Critical dependency abandoned without update")
+    REPEATED_IMPACT_WITHOUT_PLAN = (-3, "Repeated impact without plan")
 
     @property
     def weight(self) -> int:
@@ -181,4 +193,15 @@ INCIDENT_EVENTS = (
     TrustEvent(TrustEventKind.RECOVERY_VERIFIED, "Rates, transactions, and workflow recovery were checked."),
     TrustEvent(TrustEventKind.RESPONSIBILITY_ACKNOWLEDGED, "After containment Alex acknowledged the skipped test."),
     TrustEvent(TrustEventKind.PREVENTIVE_ACTION_COMPLETED, "Header compatibility became a deployment gate."),
+)
+
+PERSONAL_CAPACITY_EVENTS = (
+    TrustEvent(TrustEventKind.PERSONAL_IMPACT_COMMUNICATED, "Alex made reduced capacity and delivery risk visible at T5."),
+    TrustEvent(TrustEventKind.PRIVACY_BOUNDARY_MAINTAINED, "Alex communicated work effects without recording the private cause."),
+    TrustEvent(TrustEventKind.REALISTIC_COMMITMENT_REVISION, "Alex preserved T8 in history and requested review at T9."),
+    TrustEvent(TrustEventKind.SPECIFIC_SUPPORT_REQUESTED, "Alex requested a review adjustment that Morgan could decide."),
+    TrustEvent(TrustEventKind.DEPENDENT_PARTY_UPDATED, "Jordan received the revised handoff and stable contract."),
+    TrustEvent(TrustEventKind.UNSAFE_TASK_REASSIGNED, "A high-risk deployment was reassigned based on declared capacity."),
+    TrustEvent(TrustEventKind.RECURRING_PATTERN_ADDRESSED, "Repeated morning impact led to a durable-plan discussion."),
+    TrustEvent(TrustEventKind.REVISED_FOLLOW_UP_COMPLETED, "Alex reassessed the revised commitment when later evidence changed."),
 )

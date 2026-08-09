@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_listening_response, evaluate_manager_response, evaluate_personal_capacity_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -102,6 +102,11 @@ def build_parser() -> argparse.ArgumentParser:
     audience.add_argument("scenario_id")
     audience.add_argument("--audience", required=True)
     commands.add_parser("incident-trust", help="show incident communication trust evidence")
+    boundary = commands.add_parser("boundary", help="inspect private and work-relevant information")
+    boundary.add_argument("scenario_id")
+    impact = commands.add_parser("work-impact", help="inspect observable professional impact")
+    impact.add_argument("scenario_id")
+    commands.add_parser("personal-capacity-trust", help="show work-impact trust evidence")
     return parser
 
 
@@ -140,7 +145,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.incident is not None:
+    if scenario.work_impact is not None:
+        results = evaluate_personal_capacity_response(scenario, response)
+    elif scenario.incident is not None:
         results = evaluate_incident_behavior(response)
     elif scenario.requirement_context is not None:
         results = evaluate_requirement_response(scenario, response)
@@ -187,6 +194,22 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "personal-capacity":
+        headings = ("IMPACT", "PRIVACY", "COMMITMENT", "SUPPORT", "DEPENDENCIES")
+        dimensions = {
+            "hide-everything": ("FAIL", "PASS", "FAIL", "FAIL", "FAIL"),
+            "overshare": ("PASS", "FAIL", "PARTIAL", "PARTIAL", "PARTIAL"),
+            "vague-personal-problem": ("PARTIAL", "PASS", "FAIL", "FAIL", "FAIL"),
+            "explanation-without-plan": ("PASS", "PASS", "FAIL", "FAIL", "PARTIAL"),
+            "unsupported-reassurance": ("PARTIAL", "PASS", "FAIL", "FAIL", "FAIL"),
+            "disappear": ("FAIL", "PASS", "FAIL", "FAIL", "FAIL"),
+            "bounded-professional-disclosure": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+            "early-support-request": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':34} " + " ".join(f"{x:13}" for x in headings)]
+        lines.extend(f"{path:34} " + " ".join(f"{value:13}" for value in values) for path, values in dimensions.items())
+        lines.extend(("", "No resilience or professionalism score is calculated; dimensions remain inspectable."))
+        return "\n".join(lines)
     if scenario_id == "payment-authorization":
         headings = ("VISIBILITY", "IMPACT", "UNCERTAINTY", "CONTAINMENT", "COORDINATION")
         dimensions = {
@@ -854,6 +877,33 @@ def _incident_trust_text() -> str:
     lines.extend(("", f"Evidence balance: {trust.balance}", "Trust reflects reliable state under pressure, not heroics."))
     return "\n".join(lines)
 
+def _work_impact_context(scenario_id: str):
+    context = get_scenario(scenario_id).work_impact
+    if context is None:
+        raise KeyError(f"work-impact inspection unavailable for scenario: {scenario_id}")
+    return context
+
+def _boundary_text(scenario_id: str) -> str:
+    item = _work_impact_context(scenario_id)
+    lines = ["PRIVATE DETAILS", "", *(f"- {x}" for x in item.private_details), "", "WORK-RELEVANT INFORMATION", "",
+             *(f"- {x}" for x in item.work_relevant_information), "", "USEFUL REQUEST", "",
+             *(f"- {x}" for x in item.requested_support), "", "NEXT UPDATE", item.follow_up_point or "Not scheduled"]
+    if item.formal_support_note:
+        lines.extend(("", "FORMAL SUPPORT BOUNDARY", item.formal_support_note))
+    return "\n".join(lines)
+
+def _work_impact_text(scenario_id: str) -> str:
+    item = _work_impact_context(scenario_id)
+    return "\n".join(("AFFECTED COMMITMENT", item.affected_commitment, "", "OBSERVED IMPACT",
+        *(f"- {x}" for x in item.observed_work_impact), "", "DEPENDENCIES", *(f"- {x}" for x in item.dependencies),
+        "", "CURRENT PROFESSIONAL RISK", get_scenario(scenario_id).current_risk.name if scenario_id != "personal-capacity" else "AT_RISK",
+        "", "CURRENT CAPACITY", item.current_capacity.value, "", "NOT REQUIRED TO EXPLAIN RISK", "- The private cause in full detail."))
+
+def _personal_capacity_trust_text() -> str:
+    from soft_skills_lab.trust import PERSONAL_CAPACITY_EVENTS
+    return "\n".join(("PERSONAL CAPACITY TRUST EVIDENCE", *(f"- {e.kind.label} ({e.kind.weight:+d}): {e.detail}" for e in PERSONAL_CAPACITY_EVENTS),
+        "", "Only observable professional behavior is recorded; no private cause is stored."))
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -929,6 +979,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _incident_audience_text(args.scenario_id, args.audience)
         elif args.command == "incident-trust":
             output = _incident_trust_text()
+        elif args.command == "boundary":
+            output = _boundary_text(args.scenario_id)
+        elif args.command == "work-impact":
+            output = _work_impact_text(args.scenario_id)
+        elif args.command == "personal-capacity-trust":
+            output = _personal_capacity_trust_text()
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

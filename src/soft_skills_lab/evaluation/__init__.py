@@ -14,8 +14,9 @@ from soft_skills_lab.evaluation.collaboration import evaluate_collaboration_resp
 from soft_skills_lab.evaluation.stakeholders import evaluate_stakeholder_response
 from soft_skills_lab.evaluation.requirements import evaluate_requirement_response
 from soft_skills_lab.evaluation.incidents import evaluate_incident_behavior
+from soft_skills_lab.evaluation.personal_capacity import evaluate_personal_capacity_response
 
 __all__ = ["CRITERIA", "evaluate_commitment_response", "evaluate_incident_response", "evaluate_listening_response",
            "evaluate_question_response", "evaluate_question_sequence", "evaluate_explanation", "evaluate_status_response",
            "evaluate_uncertainty_response", "evaluate_feedback_response", "evaluate_responsibility_response", "evaluate_incident_behavior",
-           "evaluate_conflict_response", "evaluate_disagreement_response", "evaluate_manager_response", "evaluate_collaboration_response", "evaluate_stakeholder_response", "evaluate_requirement_response", "evidence_for_commitment"]
+           "evaluate_conflict_response", "evaluate_disagreement_response", "evaluate_manager_response", "evaluate_collaboration_response", "evaluate_stakeholder_response", "evaluate_requirement_response", "evaluate_personal_capacity_response", "evidence_for_commitment"]
