@@ -110,6 +110,17 @@ class TrustEventKind(Enum):
     DECISION_MISREPRESENTED = (-2, "Decision misrepresented")
     ACTION_LEFT_OWNERLESS = (-2, "Action left ownerless")
     REPEATED_MEETING_FOLLOW_UP_MISSED = (-3, "Repeated meeting follow-up missed")
+    MATERIAL_WRITTEN_STATE_CLEAR = (2, "Material written state clear")
+    DECISION_RECORDED = (2, "Decision recorded")
+    HANDOFF_DOCUMENTED = (2, "Handoff documented")
+    WRITTEN_ERROR_CORRECTED = (2, "Written error corrected")
+    REVIEW_COMMENT_EVIDENCE_BASED = (1, "Review comment evidence based")
+    REQUESTED_ACTION_CLOSED = (2, "Requested action closed")
+    AMBIGUOUS_WRITTEN_COMMITMENT = (-2, "Ambiguous written commitment")
+    MATERIALLY_WRONG_STATE_LEFT_UNCORRECTED = (-3, "Materially wrong state left uncorrected")
+    DEPENDENCY_CHANGE_NOT_DOCUMENTED = (-2, "Dependency change not documented")
+    UNSUPPORTED_WRITTEN_CLAIM = (-2, "Unsupported written claim")
+    ACTION_OWNER_MISSING = (-2, "Action owner missing")
 
     @property
     def weight(self) -> int:

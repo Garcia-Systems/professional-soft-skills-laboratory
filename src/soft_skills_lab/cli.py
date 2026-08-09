@@ -3,7 +3,8 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_interview_response, evaluate_listening_response, evaluate_manager_response, evaluate_meeting_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_interview_response, evaluate_listening_response, evaluate_manager_response, evaluate_meeting_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evaluate_written_response, evidence_for_commitment
+from soft_skills_lab.scenarios.writing import ARTIFACTS
 from soft_skills_lab.scenarios.interviews import get_answer, get_question, select_story
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
@@ -127,6 +128,8 @@ def build_parser() -> argparse.ArgumentParser:
                             ("meeting-outcome","inspect decisions and actions"),
                             ("meeting-flow","inspect the authored meeting flow")):
         command=commands.add_parser(name, help=help_text); command.add_argument("scenario_id")
+    written=commands.add_parser("written-message",help="inspect structured written behavior"); written.add_argument("scenario_id"); written.add_argument("response_id")
+    artifact=commands.add_parser("written-artifact",help="inspect a durable authored artifact"); artifact.add_argument("artifact_id")
     return parser
 
 
@@ -165,7 +168,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.meeting_context is not None:
+    if response.written_message is not None:
+        results = evaluate_written_response(scenario, response)
+    elif scenario.meeting_context is not None:
         results = evaluate_meeting_response(scenario, response)
     elif scenario.interview_question is not None:
         results = evaluate_interview_response(scenario, response)
@@ -220,6 +225,15 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "deployment-risk":
+        headings=("CONTEXT","STATE","EVIDENCE","REQUEST","FOLLOW-UP")
+        ids=("provides-standalone-context","states-current-state","uses-decision-relevant-evidence","makes-request-explicit","establishes-next-update")
+        scenario=get_scenario(scenario_id); lines=[f"{'PATH':28} "+" ".join(f"{x:11}" for x in headings)]
+        for response in list_responses(scenario_id):
+            values={x.criterion.criterion_id:x.outcome.value for x in evaluate_written_response(scenario,response)}
+            lines.append(f"{response.response_id:28} "+" ".join(f"{values[x]:11}" for x in ids))
+        lines.append("\nDimensions remain separate; neither length nor writing style earns a score.")
+        return "\n".join(lines)
     if scenario_id == "release-readiness":
         headings=("PREPARED","RELEVANT","RISK","PURPOSE","CLOSURE")
         ids=("prepares-for-role","contributes-decision-relevant-information","surfaces-relevant-risk","matches-meeting-purpose","closes-meeting-loop")
@@ -1053,6 +1067,25 @@ def _story_selection_text(question_id: str) -> str:
     item=select_story(question_id)
     return "\n".join(("SELECTED EXPERIENCE",item.experience_id,"","WHY RELEVANT",*(f"- {x}" for x in item.competencies)))
 
+def _written_text(message) -> str:
+    lines=["CHANNEL",message.channel.value,"","PURPOSE",message.purpose_statement,"","TOPIC",message.topic]
+    sections=(("CONTEXT",message.context),("EVIDENCE",message.established_facts),("UNCERTAINTY",message.uncertainty),("IMPACT",message.impact))
+    if message.current_state: lines += ["","CURRENT STATE",message.current_state.name]
+    for heading,items in sections:
+        if items: lines += ["",heading,*items]
+    for heading,value in (("REQUEST",message.request),("NEXT ACTION",message.action),("OWNER",message.owner),("DUE POINT",message.due_point),("POTENTIAL DECISION",message.decision),("NEXT UPDATE",message.follow_up_point),("REVIEW INTENT",message.review_intent.value if message.review_intent else None)):
+        if value: lines += ["",heading,value]
+    return "\n".join(lines)
+
+def _written_message_text(scenario_id,response_id):
+    response=get_response(scenario_id,response_id)
+    if response.written_message is None: raise KeyError(f"written message unavailable for {scenario_id}: {response_id}")
+    return _written_text(response.written_message)
+
+def _written_artifact_text(artifact_id):
+    try: return _written_text(ARTIFACTS[artifact_id])
+    except KeyError: raise KeyError(f"unknown written artifact: {artifact_id}") from None
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -1154,6 +1187,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _meeting_outcome_text(args.scenario_id)
         elif args.command == "meeting-flow":
             output = _meeting_flow_text(args.scenario_id)
+        elif args.command == "written-message":
+            output = _written_message_text(args.scenario_id,args.response_id)
+        elif args.command == "written-artifact":
+            output = _written_artifact_text(args.artifact_id)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:
