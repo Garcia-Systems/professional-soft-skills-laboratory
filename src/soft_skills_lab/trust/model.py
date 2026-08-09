@@ -65,6 +65,16 @@ class TrustEventKind(Enum):
     ASSUMPTION_MADE_VISIBLE = (1, "Assumption made visible")
     REQUIREMENT_DECISION_RECORDED = (2, "Requirement decision recorded")
     MATERIAL_SEMANTICS_ASSUMED = (-2, "Material semantics silently assumed")
+    INCIDENT_REPORTED_EARLY = (2, "Incident reported early")
+    UNCERTAINTY_PRESERVED = (1, "Uncertainty preserved")
+    CONTAINMENT_COORDINATED = (2, "Containment coordinated")
+    AFFECTED_PARTY_UPDATED = (2, "Affected party updated")
+    RECOVERY_VERIFIED = (2, "Recovery verified")
+    INCIDENT_HIDDEN = (-3, "Incident hidden")
+    BLAME_ASSERTED_WITHOUT_EVIDENCE = (-2, "Blame asserted without evidence")
+    IMPACT_MINIMIZED = (-2, "Impact minimized")
+    FALSE_RECOVERY_DECLARED = (-3, "False recovery declared")
+    STAKEHOLDER_LEFT_UNINFORMED = (-2, "Stakeholder left uninformed")
 
     @property
     def weight(self) -> int:
@@ -161,4 +171,14 @@ REQUIREMENT_EVENTS = (
     TrustEvent(TrustEventKind.CONCERN_RAISED_WITH_EVIDENCE, "Alex surfaced format and pending semantics with their evidence."),
     TrustEvent(TrustEventKind.REQUIREMENT_DECISION_RECORDED, "Product decisions and acceptance conditions were added to history."),
     TrustEvent(TrustEventKind.DECISION_SUPPORTED_AFTER_RESOLUTION, "Alex aligned implementation and tests to the explicit contract."),
+)
+
+INCIDENT_EVENTS = (
+    TrustEvent(TrustEventKind.INCIDENT_REPORTED_EARLY, "Alex surfaced the 18% payment failure rate at T1."),
+    TrustEvent(TrustEventKind.UNCERTAINTY_PRESERVED, "Deployment timing and header rejection remained fact and hypothesis."),
+    TrustEvent(TrustEventKind.CONTAINMENT_COORDINATED, "Morgan coordinated reversible header disablement."),
+    TrustEvent(TrustEventKind.AFFECTED_PARTY_UPDATED, "Dana and support received customer-safe guidance."),
+    TrustEvent(TrustEventKind.RECOVERY_VERIFIED, "Rates, transactions, and workflow recovery were checked."),
+    TrustEvent(TrustEventKind.RESPONSIBILITY_ACKNOWLEDGED, "After containment Alex acknowledged the skipped test."),
+    TrustEvent(TrustEventKind.PREVENTIVE_ACTION_COMPLETED, "Header compatibility became a deployment gate."),
 )
