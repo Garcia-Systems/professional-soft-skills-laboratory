@@ -335,6 +335,28 @@ python -m soft_skills_lab evaluate impossible-performance-expectation propose-co
 python -m soft_skills_lab evaluate changing-performance-scope clarify-new-scope
 ```
 
+Practice Chapter 18's evidence-based interview communication:
+
+```bash
+python -m soft_skills_lab scenario interview-mistake
+python -m soft_skills_lab compare interview-mistake
+python -m soft_skills_lab evaluate interview-mistake evidence-based-mistake
+python -m soft_skills_lab evaluate interview-mistake concise-evidence-based
+python -m soft_skills_lab interview-question mistake
+python -m soft_skills_lab interview-answer mistake evidence-based-mistake
+python -m soft_skills_lab interview-followup mistake why-skip-validation
+python -m soft_skills_lab evaluate interview-disagreement collaborative-decision
+python -m soft_skills_lab evaluate interview-conflict de-escalate-and-resolve
+python -m soft_skills_lab evaluate interview-failure responsible-failure
+python -m soft_skills_lab evaluate interview-weakness evidence-based-weakness
+python -m soft_skills_lab evaluate interview-layoff concise-forward
+python -m soft_skills_lab evaluate interview-resume-gap bounded-gap
+python -m soft_skills_lab evaluate interview-technical-unknown bounded-reasoning
+python -m soft_skills_lab evaluate interview-estimation conditional-estimate
+python -m soft_skills_lab evaluate interview-imperfect-outcome partial-success
+python -m soft_skills_lab story-selection influence
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -357,7 +379,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 15. **Handling Mistakes and Incidents** (implemented)
 16. **When Personal Problems Affect Work** (implemented)
 17. **Performance Feedback and PIPs** (implemented)
-18. Interview Communication
+18. **Interview Communication** (implemented)
 19. Meetings and Presence
 20. Written Professional Communication
 21. Trust and Reputation
