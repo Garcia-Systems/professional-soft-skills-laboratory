@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -21,6 +21,7 @@ from soft_skills_lab.scenarios.managers import PROJECT_TIMELINE
 from soft_skills_lab.trust import MANAGER_AUTONOMY_EVENTS
 from soft_skills_lab.scenarios.collaboration import TIMELINE as COLLABORATION_TIMELINE
 from soft_skills_lab.trust import COLLABORATION_EVENTS
+from soft_skills_lab.trust import STAKEHOLDER_EVENTS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -76,6 +77,13 @@ def build_parser() -> argparse.ArgumentParser:
     ownership = commands.add_parser("ownership", help="inspect peer ownership and shared interfaces")
     ownership.add_argument("scenario_id")
     commands.add_parser("collaboration-trust", help="show peer dependency trust evidence")
+    stakeholder = commands.add_parser("stakeholder-request", help="inspect an authored stakeholder request")
+    stakeholder.add_argument("scenario_id")
+    tradeoffs = commands.add_parser("tradeoffs", help="inspect transparent business/technical options")
+    tradeoffs.add_argument("scenario_id")
+    scope_change = commands.add_parser("scope-change", help="inspect a material stakeholder scope request")
+    scope_change.add_argument("scenario_id")
+    commands.add_parser("stakeholder-trust", help="show stakeholder collaboration trust evidence")
     return parser
 
 
@@ -110,7 +118,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.peer_collaboration is not None:
+    if scenario.stakeholder_request is not None:
+        results = evaluate_stakeholder_response(scenario, response)
+    elif scenario.peer_collaboration is not None:
         results = evaluate_collaboration_response(scenario, response)
     elif scenario.working_agreement is not None:
         results = evaluate_manager_response(scenario, response)
@@ -151,6 +161,21 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "reporting-export":
+        headings = ("OUTCOME", "CONTEXT", "TRADEOFF", "SCOPE", "RECOMMENDATION")
+        dimensions = {
+            "literal-yes": ("PARTIAL", "PARTIAL", "FAIL", "FAIL", "FAIL"),
+            "technical-no": ("FAIL", "FAIL", "PARTIAL", "PARTIAL", "PARTIAL"),
+            "jargon-rejection": ("FAIL", "FAIL", "PARTIAL", "PARTIAL", "FAIL"),
+            "requirement-interrogation": ("PARTIAL", "PARTIAL", "FAIL", "PARTIAL", "FAIL"),
+            "silent-scope-reduction": ("PASS", "PARTIAL", "PASS", "FAIL", "PARTIAL"),
+            "outcome-first-tradeoff": ("PASS", "PASS", "PASS", "PASS", "PARTIAL"),
+            "recommendation-with-decision": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':31} " + " ".join(f"{item:15}" for item in headings)]
+        lines.extend(f"{path:31} " + " ".join(f"{item:15}" for item in outcomes) for path, outcomes in dimensions.items())
+        lines.append("\nDimensions remain separate; saying yes or no is not itself a stakeholder-collaboration score.")
+        return "\n".join(lines)
     if scenario_id == "verification-integration":
         headings = ("HANDOFF", "CONTEXT", "OWNERSHIP", "DEPENDENCY", "LOOP")
         dimensions = {
@@ -607,6 +632,58 @@ def _collaboration_trust_text() -> str:
     return "\n".join(lines)
 
 
+def _stakeholder_request_text(scenario_id: str) -> str:
+    item = get_scenario(scenario_id).stakeholder_request
+    if item is None:
+        raise KeyError(f"stakeholder request unavailable for scenario: {scenario_id}")
+    lines = ["STATED REQUEST", item.stated_request, "", "BUSINESS OUTCOME", item.business_outcome,
+             "", "PREFERRED SOLUTION", item.preferred_solution or "Not stated", "", "DEADLINE", item.deadline or "Not stated"]
+    for heading, values in (("REQUIREMENTS", item.requirements), ("KNOWN CONSTRAINTS", item.constraints),
+                            ("ACCEPTANCE CONDITIONS", item.acceptance_conditions), ("OPEN QUESTIONS", item.open_questions),
+                            ("TECHNICAL EVIDENCE", item.technical_evidence)):
+        lines.extend(("", heading, *(f"- {value}" for value in values)))
+    lines.extend(("", "DECISION OWNERSHIP"))
+    for owner, decisions in item.decision_owners:
+        lines.append(f"- {owner}: {', '.join(decisions)}")
+    lines.extend(("", "A request is evidence of a wanted outcome; it is not automatically an implementation command."))
+    return "\n".join(lines)
+
+
+def _tradeoffs_text(scenario_id: str) -> str:
+    options = get_scenario(scenario_id).tradeoff_options
+    if not options:
+        raise KeyError(f"tradeoff inspection unavailable for scenario: {scenario_id}")
+    lines: list[str] = []
+    for option in options:
+        lines.extend((f"OPTION: {option.description.upper()}", "", "BUSINESS VALUE", option.business_value,
+                      "", "DELIVERY IMPACT", option.delivery_impact, "", "SCOPE", *(f"- {x}" for x in option.scope),
+                      "", "SATISFIES", *(f"- {x}" for x in option.constraints_satisfied), "", "DOES NOT SATISFY",
+                      *(f"- {x}" for x in option.constraints_not_satisfied), "", "RISK", option.technical_risk,
+                      "", "REVERSIBILITY", option.reversibility, ""))
+    lines.append("Options expose gains and losses; they are not opaque numeric rankings.")
+    return "\n".join(lines)
+
+
+def _scope_change_text(scenario_id: str) -> str:
+    item = get_scenario(scenario_id).scope_change
+    if item is None:
+        raise KeyError(f"scope change unavailable for scenario: {scenario_id}")
+    return "\n".join(("ORIGINAL SCOPE", *(f"- {x}" for x in item.original_scope), "", "REQUESTED ADDITION",
+                      item.requested_addition, "", "DELIVERY IMPACT", item.delivery_impact, "", "AVAILABLE TRADEOFFS",
+                      *(f"- {x}" for x in item.available_tradeoffs), "", "DECISION", item.decision or "Not yet selected"))
+
+
+def _stakeholder_trust_text() -> str:
+    trust = ProfessionalTrust()
+    lines = ["STAKEHOLDER COLLABORATION TRUST EVIDENCE"]
+    for event in STAKEHOLDER_EVENTS:
+        trust = trust.record(event)
+        lines.append(f"- {event.kind.label} ({event.kind.weight:+d}): {event.detail}")
+    lines.extend(("", f"Evidence balance: {trust.balance}",
+                  "Trust comes from neither blind yes nor reflexive no, but visible context, tradeoffs, and aligned commitments."))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -656,6 +733,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _ownership_text(args.scenario_id)
         elif args.command == "collaboration-trust":
             output = _collaboration_trust_text()
+        elif args.command == "stakeholder-request":
+            output = _stakeholder_request_text(args.scenario_id)
+        elif args.command == "tradeoffs":
+            output = _tradeoffs_text(args.scenario_id)
+        elif args.command == "scope-change":
+            output = _scope_change_text(args.scenario_id)
+        elif args.command == "stakeholder-trust":
+            output = _stakeholder_trust_text()
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:
