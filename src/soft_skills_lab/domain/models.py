@@ -25,6 +25,46 @@ class CommitmentStatus(Enum):
     MISSED = "missed"
 
 
+class StatusCategory(Enum):
+    """Decision-relevant state, deliberately more precise than traffic-light colors."""
+
+    ON_TRACK = "on_track"
+    AT_RISK = "at_risk"
+    BLOCKED = "blocked"
+    COMPLETED = "completed"
+
+
+@dataclass(frozen=True)
+class Forecast:
+    """An evidence-based estimate, not a promise or numeric probability."""
+
+    target: str
+    basis: str
+    condition: str | None = None
+    guaranteed: bool = False
+
+
+@dataclass(frozen=True)
+class StatusUpdate:
+    """Structured status semantics authored by a scenario, never parsed from prose."""
+
+    subject: str
+    current_state: StatusCategory | None = None
+    completed_work: tuple[str, ...] = ()
+    remaining_work: tuple[str, ...] = ()
+    blockers: tuple[str, ...] = ()
+    risks: tuple[str, ...] = ()
+    uncertainties: tuple[str, ...] = ()
+    dependency_impact: tuple[str, ...] = ()
+    next_action: str | None = None
+    requested_action: str | None = None
+    forecast: Forecast | None = None
+    next_update_point: int | None = None
+    dependency_owner: str | None = None
+    decision_point: str | None = None
+    activity_details: tuple[str, ...] = ()
+
+
 class DecisionRelevance(Enum):
     """How strongly an unknown affects the decision currently being made."""
 
@@ -238,6 +278,7 @@ class ProfessionalResponse:
     communicates_scope: bool = False
     preserves_uncertainty: bool = False
     supports_decision: bool = False
+    status_update: StatusUpdate | None = None
 
 
 @dataclass(frozen=True)
