@@ -25,6 +25,61 @@ class CommitmentStatus(Enum):
     MISSED = "missed"
 
 
+class DecisionRelevance(Enum):
+    """How strongly an unknown affects the decision currently being made."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    RESOLVED = "resolved"
+
+
+class InformationSource(Enum):
+    SELF_INVESTIGATION = "self investigation"
+    TEAMMATE = "teammate"
+    MANAGER = "manager"
+    STAKEHOLDER = "stakeholder"
+    DOCUMENTATION = "documentation"
+    EXTERNAL_DEPENDENCY = "external dependency"
+
+
+@dataclass(frozen=True)
+class DecisionUnknown:
+    unknown_id: str
+    description: str
+    relevance: DecisionRelevance
+    source: InformationSource
+    consequence: str
+    blocking: bool = False
+    resolved_value: str | None = None
+
+    @property
+    def is_resolved(self) -> bool:
+        return self.resolved_value is not None or self.relevance is DecisionRelevance.RESOLVED
+
+
+@dataclass(frozen=True)
+class ProfessionalQuestion:
+    """Scenario-authored question semantics; message wording is illustrative only."""
+
+    question_id: str
+    target_unknowns: tuple[str, ...]
+    message: str
+    source: InformationSource
+    investigation_performed: tuple[str, ...] = ()
+    context_supplied: tuple[str, ...] = ()
+    answerable: bool = True
+    embedded_assumptions: tuple[str, ...] = ()
+    non_blocking: bool = False
+
+
+@dataclass(frozen=True)
+class QuestionContext:
+    decision: str
+    unknowns: tuple[DecisionUnknown, ...]
+    available_evidence: tuple[str, ...] = ()
+
+
 @dataclass(frozen=True)
 class Participant:
     name: str
@@ -114,6 +169,7 @@ class WorkplaceScenario:
     commitments: tuple[Commitment, ...]
     current_risk: RiskLevel
     communication_context: CommunicationContext | None = None
+    question_context: QuestionContext | None = None
 
 
 @dataclass(frozen=True)
@@ -143,6 +199,16 @@ class ProfessionalResponse:
     distinguishes_fact_from_interpretation: bool = False
     clarifies_success_condition: bool = False
     respectful_disagreement: bool = False
+    questions: tuple[ProfessionalQuestion, ...] = ()
+    investigation_performed: tuple[str, ...] = ()
+    supplies_question_context: bool = False
+    question_dump: bool = False
+    delay_creates_risk: bool = False
+    investigation_delay: int = 0
+    immediate_escalation: bool = False
+    authority_limited: bool = False
+    proposed_next_action: bool = False
+    problem_first_sequence: bool | None = None
 
 
 @dataclass(frozen=True)

@@ -3,10 +3,11 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_incident_response, evaluate_listening_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
+from soft_skills_lab.scenarios.questions import REPORT_ANSWERS, REPORT_EXPORT, REPORT_RESPONSES, apply_answers
 from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
 
 
@@ -22,6 +23,10 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("scenario_id")
     interpret = commands.add_parser("interpret", help="inspect the deterministic communication gap")
     interpret.add_argument("scenario_id")
+    unknowns = commands.add_parser("unknowns", help="inspect decision relevance and information sources")
+    unknowns.add_argument("scenario_id")
+    answer = commands.add_parser("answer", help="apply deterministic scenario answers")
+    answer.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     return parser
 
@@ -47,11 +52,16 @@ def _scenario_text(scenario_id: str) -> str:
 def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
-    if get_scenario(scenario_id).communication_context:
+    scenario = get_scenario(scenario_id)
+    if scenario.question_context:
+        results = evaluate_question_response(scenario, response)
+    elif scenario.communication_context:
         evaluator = evaluate_listening_response
+        results = evaluator(response)
     else:
         evaluator = evaluate_commitment_response if scenario_id == "commitment-at-risk" else evaluate_incident_response
-    for result in evaluator(response):
+        results = evaluator(response)
+    for result in results:
         lines.extend(("", f"Criterion: {result.criterion.criterion_id}", result.outcome.value, result.explanation))
         if result.evidence:
             lines.append("Evidence: " + " | ".join(result.evidence))
@@ -66,6 +76,17 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "report-export":
+        headings = ("RELEVANT", "CONTEXT", "INVESTIGATED", "ANSWERABLE", "NO ASSUMPTION", "NO DUMP")
+        criterion_ids = ("targets-relevant-unknown", "provides-context", "shows-prior-investigation", "is-answerable",
+                         "avoids-assumption-disguised-as-question", "avoids-question-dump")
+        lines = [f"{'PATH':22} " + " ".join(f"{heading:13}" for heading in headings)]
+        for response_id in REPORT_RESPONSES:
+            results = {item.criterion.criterion_id: item.outcome.value for item in
+                       evaluate_question_response(REPORT_EXPORT, REPORT_RESPONSES[response_id])}
+            lines.append(f"{response_id:22} " + " ".join(f"{results[item]:13}" for item in criterion_ids))
+        lines.append("\nMore questions are not automatically better; outcomes are observable criteria, not a score.")
+        return "\n".join(lines)
     if scenario_id == "demo-stability":
         headings = ("CONCERN", "ASSUMPTIONS", "UNKNOWN", "NEXT ACTION", "FOLLOW-UP")
         criterion_ids = ("captures-explicit-concern", "avoids-unsupported-assumption", "identifies-unknowns", "establishes-next-action", "establishes-follow-up")
@@ -102,6 +123,30 @@ def _interpretation_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
+def _unknowns_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).question_context
+    if context is None:
+        raise KeyError(f"unknown inspection unavailable for scenario: {scenario_id}")
+    lines = [f"Decision: {context.decision}", "", f"{'UNKNOWN':34} {'DECISION RELEVANCE':20} SOURCE"]
+    for item in context.unknowns:
+        lines.append(f"{item.description:34} {item.relevance.name:20} {item.source.value}")
+        lines.append(f"  Why: {item.consequence}")
+    return "\n".join(lines)
+
+
+def _answer_text(scenario_id: str) -> str:
+    if scenario_id != "report-export":
+        raise KeyError(f"deterministic answers unavailable for scenario: {scenario_id}")
+    updated = apply_answers(REPORT_EXPORT)
+    lines = ["Deterministic lifecycle: unknown -> question -> answer -> known fact -> decision", "", "Priya's answers:"]
+    lines.extend(f"- {key}: {value}" for key, value in REPORT_ANSWERS.items())
+    lines.extend(("", "Updated known facts:"))
+    lines.extend(f"- {fact}" for fact in updated.known_facts[-len(REPORT_ANSWERS):])
+    lines.append(f"\nRemaining unknowns: {len(updated.uncertainties)}")
+    lines.append("Decision: implementation can begin using the confirmed export contract.")
+    return "\n".join(lines)
+
+
 def _trust_text() -> str:
     trust = ProfessionalTrust()
     lines = ["Professional trust is accumulated evidence.", "", "Evidence history:"]
@@ -123,6 +168,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _comparison_text(args.scenario_id)
         elif args.command == "interpret":
             output = _interpretation_text(args.scenario_id)
+        elif args.command == "unknowns":
+            output = _unknowns_text(args.scenario_id)
+        elif args.command == "answer":
+            output = _answer_text(args.scenario_id)
         else:
             output = _trust_text()
     except KeyError as error:
