@@ -2,6 +2,7 @@
 
 from soft_skills_lab.domain.models import Commitment, Participant, ProfessionalResponse, RiskLevel, WorkplaceScenario
 from soft_skills_lab.evaluation.incident import INCIDENT_FACT
+from soft_skills_lab.scenarios.commitment import COMMITMENT_AT_RISK, RESPONSES as COMMITMENT_RESPONSES
 
 PRODUCTION_INCIDENT = WorkplaceScenario(
     scenario_id="production-incident",
@@ -53,21 +54,27 @@ RESPONSES = {
     ),
 }
 
+SCENARIOS = {
+    PRODUCTION_INCIDENT.scenario_id: (PRODUCTION_INCIDENT, RESPONSES),
+    COMMITMENT_AT_RISK.scenario_id: (COMMITMENT_AT_RISK, COMMITMENT_RESPONSES),
+}
+
 
 def get_scenario(scenario_id: str) -> WorkplaceScenario:
-    if scenario_id != PRODUCTION_INCIDENT.scenario_id:
+    try:
+        return SCENARIOS[scenario_id][0]
+    except KeyError:
         raise KeyError(f"unknown scenario: {scenario_id}")
-    return PRODUCTION_INCIDENT
 
 
 def list_responses(scenario_id: str) -> tuple[ProfessionalResponse, ...]:
     get_scenario(scenario_id)
-    return tuple(RESPONSES.values())
+    return tuple(SCENARIOS[scenario_id][1].values())
 
 
 def get_response(scenario_id: str, response_id: str) -> ProfessionalResponse:
     get_scenario(scenario_id)
     try:
-        return RESPONSES[response_id]
+        return SCENARIOS[scenario_id][1][response_id]
     except KeyError:
         raise KeyError(f"unknown response for {scenario_id}: {response_id}") from None

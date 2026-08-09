@@ -5,6 +5,7 @@ from enum import Enum
 
 
 class TrustEventKind(Enum):
+    PREPARED_FOR_WORK = (1, "Prepared for work")
     RISK_COMMUNICATED_EARLY = (2, "Risk communicated early")
     COMMITMENT_KEPT = (2, "Commitment kept")
     MISTAKE_ACKNOWLEDGED = (1, "Mistake acknowledged")
@@ -12,6 +13,10 @@ class TrustEventKind(Enum):
     UNSUPPORTED_CLAIM_MADE = (-1, "Unsupported claim made")
     IMPORTANT_RISK_HIDDEN = (-3, "Important risk hidden")
     COMMITMENT_MISSED_WITHOUT_WARNING = (-3, "Commitment missed without warning")
+    FOLLOW_UP_MISSED = (-2, "Follow-up missed")
+    DEPENDENCY_ACKNOWLEDGED = (1, "Dependency acknowledged")
+    EXPECTATION_CLARIFIED = (1, "Expectation clarified")
+    CORRECTIVE_ACTION_TAKEN = (1, "Corrective action taken")
 
     @property
     def weight(self) -> int:
