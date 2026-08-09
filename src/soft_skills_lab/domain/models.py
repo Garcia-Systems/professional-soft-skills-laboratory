@@ -69,6 +69,31 @@ class BehavioralActionPlan:
 
 
 @dataclass(frozen=True)
+class ResponsibilityBoundary:
+    """Evidence-based scope for one actor, not a legal-liability finding."""
+
+    actor: str
+    controlled: tuple[str, ...] = ()
+    did_not_control: tuple[str, ...] = ()
+    contribution: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ResponsibilityMap:
+    """Deterministic decomposition of an outcome and its responsibility boundaries."""
+
+    incident: str
+    boundaries: tuple[ResponsibilityBoundary, ...]
+    process_conditions: tuple[str, ...] = ()
+    external_factors: tuple[str, ...] = ()
+    results: tuple[str, ...] = ()
+    evidence: tuple[str, ...] = ()
+    not_supported: tuple[str, ...] = ()
+    immediate_responsibility: tuple[str, ...] = ()
+    preventive_action: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ProfessionalFeedback:
     """Scenario-authored decomposition; it does not parse arbitrary prose."""
 
@@ -316,6 +341,7 @@ class WorkplaceScenario:
     evidence_context: EvidenceContext | None = None
     feedback: ProfessionalFeedback | None = None
     action_plan: BehavioralActionPlan | None = None
+    responsibility_map: ResponsibilityMap | None = None
 
 
 @dataclass(frozen=True)
@@ -383,6 +409,14 @@ class ProfessionalResponse:
     identifies_behavior_change: bool = False
     preserves_respectful_disagreement: bool = False
     demonstrated_improvement: bool = False
+    identifies_own_contribution: bool = False
+    over_owns: bool = False
+    preserves_agency: bool = True
+    prioritizes_containment: bool = False
+    identifies_corrective_action: bool = False
+    identifies_preventive_action: bool = False
+    acknowledges_impact: bool = False
+    self_condemnation: bool = False
 
 
 @dataclass(frozen=True)

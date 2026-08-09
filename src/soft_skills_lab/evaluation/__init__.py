@@ -6,7 +6,9 @@ from soft_skills_lab.evaluation.explanations import evaluate_explanation
 from soft_skills_lab.evaluation.status_updates import evaluate_status_response
 from soft_skills_lab.evaluation.uncertainty import evaluate_uncertainty_response
 from soft_skills_lab.evaluation.feedback import evaluate_feedback_response
+from soft_skills_lab.evaluation.responsibility import evaluate_responsibility_response
 
 __all__ = ["CRITERIA", "evaluate_commitment_response", "evaluate_incident_response", "evaluate_listening_response",
            "evaluate_question_response", "evaluate_question_sequence", "evaluate_explanation", "evaluate_status_response",
-           "evaluate_uncertainty_response", "evaluate_feedback_response", "evidence_for_commitment"]
+           "evaluate_uncertainty_response", "evaluate_feedback_response", "evaluate_responsibility_response",
+           "evidence_for_commitment"]
