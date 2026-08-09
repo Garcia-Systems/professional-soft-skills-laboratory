@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -92,6 +92,16 @@ def build_parser() -> argparse.ArgumentParser:
     acceptance.add_argument("scenario_id")
     requirement_history = commands.add_parser("requirement-history", help="inspect incremental requirement decisions")
     requirement_history.add_argument("scenario_id")
+    incident = commands.add_parser("incident", help="inspect authored incident state")
+    incident.add_argument("scenario_id")
+    recovery = commands.add_parser("recovery", help="inspect recovery evidence")
+    recovery.add_argument("scenario_id")
+    review = commands.add_parser("incident-review", help="inspect post-incident learning")
+    review.add_argument("scenario_id")
+    audience = commands.add_parser("incident-audience", help="inspect an audience-specific incident view")
+    audience.add_argument("scenario_id")
+    audience.add_argument("--audience", required=True)
+    commands.add_parser("incident-trust", help="show incident communication trust evidence")
     return parser
 
 
@@ -130,7 +140,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.requirement_context is not None:
+    if scenario.incident is not None:
+        results = evaluate_incident_behavior(response)
+    elif scenario.requirement_context is not None:
         results = evaluate_requirement_response(scenario, response)
     elif scenario.stakeholder_request is not None:
         results = evaluate_stakeholder_response(scenario, response)
@@ -175,6 +187,22 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "payment-authorization":
+        headings = ("VISIBILITY", "IMPACT", "UNCERTAINTY", "CONTAINMENT", "COORDINATION")
+        dimensions = {
+            "hide-and-fix": ("FAIL", "PARTIAL", "PASS", "PARTIAL", "FAIL"),
+            "blame-first": ("PASS", "PARTIAL", "FAIL", "FAIL", "FAIL"),
+            "self-blame-first": ("PASS", "PARTIAL", "FAIL", "FAIL", "PARTIAL"),
+            "investigation-dump": ("PARTIAL", "FAIL", "PASS", "PARTIAL", "FAIL"),
+            "premature-root-cause": ("PASS", "PASS", "FAIL", "PASS", "PARTIAL"),
+            "silent-rollback": ("FAIL", "PARTIAL", "PARTIAL", "PASS", "FAIL"),
+            "coordinated-incident-response": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+            "containment-then-learning": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':32} " + " ".join(f"{x:13}" for x in headings)]
+        lines.extend(f"{path:32} " + " ".join(f"{x:13}" for x in values) for path, values in dimensions.items())
+        lines.append("\nDimensions remain separate; there is no single incident-response score.")
+        return "\n".join(lines)
     if scenario_id == "transaction-export":
         headings = ("MATERIAL", "EVIDENCE", "ASSUMPTIONS", "DECISIONS", "ACCEPTANCE")
         dimensions = {
@@ -775,6 +803,57 @@ def _requirement_history_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
+def _incident_text(scenario_id: str) -> str:
+    item = get_scenario(scenario_id).incident
+    if item is None:
+        raise KeyError(f"incident unavailable for scenario: {scenario_id}")
+    lines = ["INCIDENT", item.title, "", "STATE", item.state.value]
+    for heading, values in (("IMPACT", item.impact), ("SYMPTOMS", item.symptoms), ("ESTABLISHED FACTS", item.established_facts),
+                            ("CURRENT HYPOTHESIS", item.hypotheses), ("NOT YET ESTABLISHED", item.unknowns),
+                            ("CONTAINMENT OPTION", item.containment_actions)):
+        lines.extend(("", heading, *(f"- {x}" for x in values)))
+    lines.extend(("", "TECHNICAL OWNER", item.technical_owner, "", "INCIDENT COORDINATOR", item.coordinator))
+    if item.business_owner:
+        lines.extend(("", "BUSINESS OWNER", item.business_owner))
+    lines.extend(("", "NEXT UPDATE", item.next_update_point or "No further update scheduled"))
+    return "\n".join(lines)
+
+def _recovery_text(scenario_id: str) -> str:
+    item = get_scenario(scenario_id).incident
+    if item is None:
+        raise KeyError(f"recovery unavailable for scenario: {scenario_id}")
+    lines = ["RECOVERY CHECKS"]
+    lines.extend(f"- {'VERIFIED' if check.verified else 'PENDING'}: {check.description}" for check in item.recovery_checks)
+    lines.extend(("", "RECOVERY VERIFIED", "yes" if item.recovery_verified else "no",
+                  "A deployed fix is not equivalent to verified recovery."))
+    return "\n".join(lines)
+
+def _incident_review_text(scenario_id: str) -> str:
+    review = get_scenario(scenario_id).incident.review if get_scenario(scenario_id).incident else None
+    if review is None:
+        raise KeyError(f"incident review unavailable for scenario: {scenario_id}")
+    lines = ["INCIDENT REVIEW"]
+    for heading in ("timeline", "impact", "contributing_conditions", "responsibility", "detection", "containment", "correction", "prevention"):
+        lines.extend(("", heading.replace("_", " ").upper(), *(f"- {x}" for x in getattr(review, heading))))
+    return "\n".join(lines)
+
+def _incident_audience_text(scenario_id: str, audience: str) -> str:
+    views = dict(get_scenario(scenario_id).incident_audiences)
+    if audience not in views:
+        raise KeyError(f"unknown incident audience for {scenario_id}: {audience}")
+    return "\n".join(("AUDIENCE", audience, "", "UPDATE", *(f"- {x}" for x in views[audience]), "",
+                        "All audience views preserve the same underlying incident truth."))
+
+def _incident_trust_text() -> str:
+    from soft_skills_lab.trust import INCIDENT_EVENTS
+    trust = ProfessionalTrust()
+    lines = ["INCIDENT COMMUNICATION TRUST EVIDENCE"]
+    for event in INCIDENT_EVENTS:
+        trust = trust.record(event)
+        lines.append(f"- {event.kind.label} ({event.kind.weight:+d}): {event.detail}")
+    lines.extend(("", f"Evidence balance: {trust.balance}", "Trust reflects reliable state under pressure, not heroics."))
+    return "\n".join(lines)
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -840,6 +919,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _acceptance_text(args.scenario_id)
         elif args.command == "requirement-history":
             output = _requirement_history_text(args.scenario_id)
+        elif args.command == "incident":
+            output = _incident_text(args.scenario_id)
+        elif args.command == "recovery":
+            output = _recovery_text(args.scenario_id)
+        elif args.command == "incident-review":
+            output = _incident_review_text(args.scenario_id)
+        elif args.command == "incident-audience":
+            output = _incident_audience_text(args.scenario_id, args.audience)
+        elif args.command == "incident-trust":
+            output = _incident_trust_text()
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

@@ -289,6 +289,21 @@ python -m soft_skills_lab scenario download-button-default
 python -m soft_skills_lab scenario pending-requirement-change
 ```
 
+
+Practice Chapter 15's accurate, coordinated incident response:
+
+```bash
+python -m soft_skills_lab scenario payment-authorization
+python -m soft_skills_lab compare payment-authorization
+python -m soft_skills_lab incident payment-authorization
+python -m soft_skills_lab recovery payment-authorization
+python -m soft_skills_lab incident-audience payment-authorization --audience customer-support
+python -m soft_skills_lab incident-review payment-authorization
+python -m soft_skills_lab incident data-exposure-risk
+python -m soft_skills_lab incident payment-alert-false-alarm
+python -m soft_skills_lab incident-trust
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -308,7 +323,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 12. **Working With Teammates** (implemented)
 13. **Working With Business Stakeholders** (implemented)
 14. **Handling Ambiguous Requirements** (implemented)
-15. Handling Mistakes and Incidents
+15. **Handling Mistakes and Incidents** (implemented)
 16. When Personal Problems Affect Work
 17. Performance Feedback and PIPs
 18. Interview Communication

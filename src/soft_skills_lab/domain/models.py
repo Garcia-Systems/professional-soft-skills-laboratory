@@ -133,6 +133,82 @@ class HandoffState(Enum):
     REWORK_REQUIRED = "REWORK REQUIRED"
 
 
+class IncidentState(Enum):
+    """Operational incident milestones, separate from causal conclusions."""
+
+    DETECTED = "DETECTED"
+    ACTIVE = "ACTIVE"
+    CONTAINED = "CONTAINED"
+    RECOVERING = "RECOVERING"
+    RESOLVED = "RESOLVED"
+    REVIEWED = "REVIEWED"
+
+
+@dataclass(frozen=True)
+class RecoveryCheck:
+    description: str
+    verified: bool = False
+
+
+@dataclass(frozen=True)
+class IncidentReview:
+    timeline: tuple[str, ...]
+    impact: tuple[str, ...]
+    contributing_conditions: tuple[str, ...]
+    responsibility: tuple[str, ...]
+    detection: tuple[str, ...]
+    containment: tuple[str, ...]
+    correction: tuple[str, ...]
+    prevention: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class Incident:
+    """Small authored incident view; not monitoring or causal inference machinery."""
+
+    incident_id: str
+    title: str
+    detected_at: str
+    state: IncidentState
+    coordinator: str
+    technical_owner: str
+    business_owner: str | None
+    affected_workflow: str
+    symptoms: tuple[str, ...]
+    impact: tuple[str, ...]
+    established_facts: tuple[str, ...]
+    hypotheses: tuple[str, ...]
+    unknowns: tuple[str, ...]
+    containment_actions: tuple[str, ...]
+    corrective_actions: tuple[str, ...]
+    recovery_checks: tuple[RecoveryCheck, ...]
+    stakeholders: tuple[str, ...]
+    next_update_point: str | None
+    review: IncidentReview | None = None
+
+    @property
+    def recovery_verified(self) -> bool:
+        return bool(self.recovery_checks) and all(check.verified for check in self.recovery_checks)
+
+    def transition(self, state: IncidentState) -> "Incident":
+        allowed = {
+            IncidentState.DETECTED: {IncidentState.ACTIVE},
+            IncidentState.ACTIVE: {IncidentState.CONTAINED},
+            IncidentState.CONTAINED: {IncidentState.RECOVERING},
+            IncidentState.RECOVERING: {IncidentState.RESOLVED},
+            IncidentState.RESOLVED: {IncidentState.REVIEWED},
+            IncidentState.REVIEWED: set(),
+        }
+        if state not in allowed[self.state]:
+            raise ValueError(f"invalid incident transition: {self.state.value} -> {state.value}")
+        if state is IncidentState.RESOLVED and not self.recovery_verified:
+            raise ValueError("incident cannot be resolved before recovery is verified")
+        if state is IncidentState.REVIEWED and self.review is None:
+            raise ValueError("incident cannot be reviewed without an incident review")
+        from dataclasses import replace
+        return replace(self, state=state)
+
+
 @dataclass(frozen=True)
 class Handoff:
     handoff_id: str
@@ -661,6 +737,8 @@ class WorkplaceScenario:
     tradeoff_options: tuple[TradeoffOption, ...] = ()
     scope_change: ScopeChange | None = None
     requirement_context: RequirementContext | None = None
+    incident: Incident | None = None
+    incident_audiences: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -758,6 +836,15 @@ class ProfessionalResponse:
     preserves_material_risk: bool = False
     ends_argument: bool = False
     resolves_issue: bool = False
+    makes_incident_visible: bool = False
+    states_observed_impact: bool = False
+    separates_cause_from_hypothesis: bool = False
+    establishes_incident_ownership: bool = False
+    coordinates_affected_parties: bool = False
+    verifies_recovery: bool = False
+    closes_incident_loop: bool = False
+    defers_blame_until_evidence: bool = False
+    creates_prevention_from_evidence: bool = False
     pauses_conversation: bool = False
     pause_has_checkpoint: bool = False
     pause_names_needed_evidence: bool = False
