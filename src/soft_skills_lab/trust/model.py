@@ -99,6 +99,17 @@ class TrustEventKind(Enum):
     CHECKPOINT_MISSED_WITHOUT_UPDATE = (-2, "Checkpoint missed without update")
     KNOWN_BEHAVIOR_GAP_REPEATED = (-2, "Known behavior gap repeated")
     PLAN_EXPECTATION_IGNORED = (-2, "Plan expectation ignored")
+    MEETING_PREPARED = (1, "Meeting prepared")
+    MATERIAL_RISK_SURFACED_IN_DECISION = (2, "Material risk surfaced in decision")
+    USEFUL_QUESTION_ASKED = (1, "Useful question asked")
+    DECISION_CAPTURED = (2, "Decision captured")
+    ACTION_OWNER_CONFIRMED = (1, "Action owner confirmed")
+    MEETING_FOLLOW_UP_COMPLETED = (2, "Meeting follow-up completed")
+    OWNED_INFORMATION_UNPREPARED = (-2, "Owned information unprepared")
+    MATERIAL_FACT_WITHHELD = (-3, "Material fact withheld")
+    DECISION_MISREPRESENTED = (-2, "Decision misrepresented")
+    ACTION_LEFT_OWNERLESS = (-2, "Action left ownerless")
+    REPEATED_MEETING_FOLLOW_UP_MISSED = (-3, "Repeated meeting follow-up missed")
 
     @property
     def weight(self) -> int:
@@ -226,4 +237,12 @@ PERFORMANCE_PLAN_EVENTS = (
     TrustEvent(TrustEventKind.FEEDBACK_APPLIED, "Alex corrected an incomplete status update at the next checkpoint."),
     TrustEvent(TrustEventKind.FACTUAL_DISAGREEMENT_HANDLED_PROFESSIONALLY, "Alex corrected the T8 fact while engaging with valid visibility feedback."),
     TrustEvent(TrustEventKind.PLAN_BEHAVIOR_SUSTAINED, "Defined behavior appeared across multiple relevant work events."),
+)
+
+MEETING_EVENTS = (
+    TrustEvent(TrustEventKind.MEETING_PREPARED, "Alex inspected the owned boundary failure before the decision."),
+    TrustEvent(TrustEventKind.MATERIAL_RISK_SURFACED_IN_DECISION, "Alex surfaced the user-visible boundary consequence."),
+    TrustEvent(TrustEventKind.USEFUL_QUESTION_ASKED, "Alex tested whether 30 days met Dana's use case."),
+    TrustEvent(TrustEventKind.DECISION_CAPTURED, "The confirmed limited release was recorded separately from proposals."),
+    TrustEvent(TrustEventKind.ACTION_OWNER_CONFIRMED, "Alex owned the T4 correction and validation."),
 )
