@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_listening_response, evaluate_manager_response, evaluate_question_response, evaluate_responsibility_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -17,6 +17,8 @@ from soft_skills_lab.scenarios.feedback import PRIMARY_RESPONSE_IDS as FEEDBACK_
 from soft_skills_lab.trust import FEEDBACK_IMPROVEMENT_EVENTS
 from soft_skills_lab.scenarios.responsibility import PRIMARY_RESPONSE_IDS as RESPONSIBILITY_RESPONSE_IDS
 from soft_skills_lab.trust import RESPONSIBILITY_LEARNING_EVENTS
+from soft_skills_lab.scenarios.managers import PROJECT_TIMELINE
+from soft_skills_lab.trust import MANAGER_AUTONOMY_EVENTS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -62,6 +64,11 @@ def build_parser() -> argparse.ArgumentParser:
     conflict.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     commands.add_parser("disagreement-trust", help="show constructive disagreement trust evidence")
+    agreement = commands.add_parser("manager-agreement", help="inspect explicit manager operating boundaries")
+    agreement.add_argument("scenario_id")
+    visibility = commands.add_parser("visibility", help="inspect contextual visibility thresholds")
+    visibility.add_argument("scenario_id")
+    commands.add_parser("manager-trust", help="show manager trust and autonomy evidence")
     return parser
 
 
@@ -81,6 +88,9 @@ def _scenario_text(scenario_id: str) -> str:
     elif scenario_id == "integration-delivery":
         lines.append("\nTimeline:")
         lines.extend(f"- T{event.point}: {event.description}" for event in INTEGRATION_TIMELINE)
+    elif scenario_id == "project-autonomy":
+        lines.append("\nTimeline:")
+        lines.extend(f"- T{event.point}: {event.description}" for event in PROJECT_TIMELINE)
     lines.append("\nReference responses:")
     lines.extend(f"- {response.response_id}: {response.label}" for response in list_responses(scenario_id))
     return "\n".join(lines)
@@ -90,7 +100,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.conflict_state is not None:
+    if scenario.working_agreement is not None:
+        results = evaluate_manager_response(scenario, response)
+    elif scenario.conflict_state is not None:
         results = evaluate_conflict_response(scenario, response)
     elif scenario.decision_context is not None:
         results = evaluate_disagreement_response(scenario, response)
@@ -127,6 +139,22 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "project-autonomy":
+        headings = ("AUTONOMY", "VISIBILITY", "THRESHOLDS", "RECOMMENDATION", "FOLLOW-UP")
+        dimensions = {
+            "permission-for-everything": ("FAIL", "PASS", "PARTIAL", "FAIL", "PARTIAL"),
+            "silent-autonomy": ("PASS", "FAIL", "FAIL", "PARTIAL", "FAIL"),
+            "status-flood": ("PARTIAL", "PARTIAL", "PARTIAL", "PARTIAL", "PASS"),
+            "late-escalation": ("PASS", "FAIL", "FAIL", "PASS", "PARTIAL"),
+            "escalate-without-investigation": ("FAIL", "PASS", "FAIL", "FAIL", "PASS"),
+            "managed-autonomy": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+            "visibility-with-recommendation": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':34} " + " ".join(f"{item:14}" for item in headings)]
+        for response_id, outcomes in dimensions.items():
+            lines.append(f"{response_id:34} " + " ".join(f"{item:14}" for item in outcomes))
+        lines.append("\nDimensions remain separate; there is no manager-relationship or obedience score.")
+        return "\n".join(lines)
     if scenario_id == "release-validation":
         headings = ("NO ATTACK", "CURRENT ISSUE", "EVIDENCE", "DECISION PATH", "RISK PRESERVED")
         ids = ("avoids-counterattack", "refocuses-current-issue", "restores-shared-facts", "creates-decision-path", "preserves-material-risk")
@@ -480,6 +508,41 @@ def _conflict_text(scenario_id: str) -> str:
     return "\n".join(lines)
 
 
+def _manager_agreement_text(scenario_id: str) -> str:
+    agreement = get_scenario(scenario_id).working_agreement
+    if agreement is None:
+        raise KeyError(f"working agreement unavailable for scenario: {scenario_id}")
+    lines = ["WORKING AGREEMENT", "", "EMPLOYEE", agreement.employee, "", "MANAGER", agreement.manager,
+             "", f"{agreement.employee.upper()} OWNS INDEPENDENTLY"]
+    lines.extend(f"- {item}" for item in agreement.responsibilities)
+    for threshold, heading in (("INFORM", f"INFORM {agreement.manager.upper()}"), ("CONSULT", "CONSULT BEFORE ACTION"), ("ESCALATE", "ESCALATE")):
+        lines.extend(("", heading))
+        lines.extend(f"- {item.subject}." for item in agreement.expectations if item.threshold.value == threshold)
+    lines.extend(("", "NORMAL EXPECTATION", agreement.normal_update_cadence))
+    return "\n".join(lines)
+
+
+def _visibility_text(scenario_id: str) -> str:
+    agreement = get_scenario(scenario_id).working_agreement
+    if agreement is None:
+        raise KeyError(f"visibility thresholds unavailable for scenario: {scenario_id}")
+    lines = ["VISIBILITY THRESHOLDS", "", "These thresholds come from this working agreement; they are not universal."]
+    for item in agreement.expectations:
+        point = f"T{item.point} " if item.point is not None else ""
+        lines.extend(("", f"{point}{item.subject}", f"Threshold: {item.threshold.value}", f"Expected behavior: {item.expected_behavior}"))
+    return "\n".join(lines)
+
+
+def _manager_trust_text() -> str:
+    trust = ProfessionalTrust()
+    lines = ["MANAGER TRUST AND AUTONOMY EVIDENCE"]
+    for event in MANAGER_AUTONOMY_EVENTS:
+        trust = trust.record(event)
+        lines.append(f"- {event.kind.label} ({event.kind.weight:+d}): {event.detail}")
+    lines.extend(("", f"Evidence balance: {trust.balance}", "Repeated visible behavior—not obedience or personality—supports adjusted autonomy."))
+    return "\n".join(lines)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -517,6 +580,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _decision_text(args.scenario_id)
         elif args.command == "conflict":
             output = _conflict_text(args.scenario_id)
+        elif args.command == "manager-agreement":
+            output = _manager_agreement_text(args.scenario_id)
+        elif args.command == "visibility":
+            output = _visibility_text(args.scenario_id)
+        elif args.command == "manager-trust":
+            output = _manager_trust_text()
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

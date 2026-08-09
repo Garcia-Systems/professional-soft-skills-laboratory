@@ -37,6 +37,7 @@ from soft_skills_lab.scenarios.conflict import (
     CODE_REVIEW, CODE_RESPONSES, MANAGER_MATERIAL, MANAGER_MATERIAL_RESPONSES, MANAGER_TRADEOFF,
     MANAGER_TRADEOFF_RESPONSES, PUBLIC_CONFLICT, PUBLIC_RESPONSES, RELEASE_RESPONSES, RELEASE_VALIDATION,
 )
+from soft_skills_lab.scenarios.managers import MANAGER_SCENARIOS
 
 PRODUCTION_INCIDENT = WorkplaceScenario(
     scenario_id="production-incident",
@@ -128,6 +129,7 @@ SCENARIOS = {
     MANAGER_MATERIAL.scenario_id: (MANAGER_MATERIAL, MANAGER_MATERIAL_RESPONSES),
     PUBLIC_CONFLICT.scenario_id: (PUBLIC_CONFLICT, PUBLIC_RESPONSES),
 }
+SCENARIOS.update(MANAGER_SCENARIOS)
 
 
 def get_scenario(scenario_id: str) -> WorkplaceScenario:

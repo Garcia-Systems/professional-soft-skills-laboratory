@@ -113,6 +113,39 @@ class ConflictStage(Enum):
     DECISION_RESOLVED = "decision resolved"
 
 
+class VisibilityThreshold(Enum):
+    """Scenario-specific action boundary agreed by an employee and manager."""
+
+    ROUTINE = "ROUTINE"
+    INFORM = "INFORM"
+    CONSULT = "CONSULT"
+    ESCALATE = "ESCALATE"
+
+
+@dataclass(frozen=True)
+class ManagerExpectation:
+    subject: str
+    threshold: VisibilityThreshold
+    expected_behavior: str
+    decision_owner: str
+    evidence_of_agreement: str
+    point: int | None = None
+
+
+@dataclass(frozen=True)
+class WorkingAgreement:
+    """Explicit operating boundaries, not a universal policy or HR record."""
+
+    manager: str
+    employee: str
+    responsibilities: tuple[str, ...]
+    expectations: tuple[ManagerExpectation, ...]
+    normal_update_cadence: str
+    known_dependencies: tuple[str, ...] = ()
+    version: int = 1
+    supersedes: int | None = None
+
+
 @dataclass(frozen=True)
 class ConflictSignal:
     """Scenario-authored behavior; ``statement`` is illustrative, never parsed."""
@@ -415,6 +448,7 @@ class WorkplaceScenario:
     responsibility_map: ResponsibilityMap | None = None
     decision_context: DecisionContext | None = None
     conflict_state: ConflictState | None = None
+    working_agreement: WorkingAgreement | None = None
 
 
 @dataclass(frozen=True)
@@ -516,6 +550,14 @@ class ProfessionalResponse:
     pause_has_checkpoint: bool = False
     pause_names_needed_evidence: bool = False
     repairs_own_contribution: bool = False
+    owns_delegated_decisions: bool = False
+    threshold_risk_visible: bool = False
+    consultation_boundary_respected: bool = False
+    true_blocker_escalated: bool = False
+    unnecessary_upward_delegation: bool = False
+    recommendation_provided: bool = False
+    manager_signal_preserved: bool = False
+    working_agreement_clarified: bool = False
 
 
 @dataclass(frozen=True)
