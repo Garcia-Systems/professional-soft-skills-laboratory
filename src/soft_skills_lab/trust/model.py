@@ -257,3 +257,87 @@ MEETING_EVENTS = (
     TrustEvent(TrustEventKind.DECISION_CAPTURED, "The confirmed limited release was recorded separately from proposals."),
     TrustEvent(TrustEventKind.ACTION_OWNER_CONFIRMED, "Alex owned the T4 correction and validation."),
 )
+
+# Chapter 21 keeps the original event stream above intact while adding domain-specific,
+# observer-scoped evidence.  No balance or aggregate score is used by this model.
+class TrustDimension(Enum):
+    COMMITMENT_RELIABILITY = "commitment-reliability"
+    RISK_VISIBILITY = "risk-visibility"
+    HANDOFF_RELIABILITY = "handoff-reliability"
+    TECHNICAL_JUDGMENT = "technical-judgment"
+    OWNERSHIP = "ownership"
+    FEEDBACK_RESPONSIVENESS = "feedback-responsiveness"
+    INCIDENT_COMMUNICATION = "incident-communication"
+    DECISION_CREDIBILITY = "decision-credibility"
+
+
+class TrustState(Enum):
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+    DEVELOPING = "DEVELOPING"
+    ESTABLISHED = "ESTABLISHED"
+    MIXED = "MIXED"
+    DEGRADED = "DEGRADED"
+    REBUILDING = "REBUILDING"
+
+
+class EvidencePolarity(Enum):
+    POSITIVE = "+"
+    NEGATIVE = "-"
+    NEUTRAL = " "
+
+
+class EvidenceProvenance(Enum):
+    DIRECT_OBSERVATION = "DIRECT_OBSERVATION"
+    SHARED_ARTIFACT = "SHARED_ARTIFACT"
+    DOCUMENTED_EVENT = "DOCUMENTED_EVENT"
+
+
+@dataclass(frozen=True)
+class TrustEvidence:
+    event_id: str
+    time: str
+    dimension: TrustDimension
+    polarity: EvidencePolarity
+    observable_behavior: str
+    provenance: EvidenceProvenance
+    linked_scenario: str
+    observers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class DimensionInterpretation:
+    state: TrustState
+    why: str
+
+
+@dataclass(frozen=True)
+class TrustHistory:
+    scenario_id: str
+    subject: str
+    evidence: tuple[TrustEvidence, ...]
+    interpretations: dict[TrustDimension, DimensionInterpretation]
+
+    def for_dimension(self, dimension: TrustDimension, observer: str | None = None) -> tuple[TrustEvidence, ...]:
+        events = (event for event in self.evidence if event.dimension is dimension)
+        if observer is not None:
+            events = (event for event in events if observer.casefold() in {name.casefold() for name in event.observers})
+        return tuple(events)
+
+    def state(self, dimension: TrustDimension, observer: str | None = None) -> TrustState:
+        events = self.for_dimension(dimension, observer)
+        if observer is None:
+            authored = self.interpretations.get(dimension)
+            return authored.state if authored else TrustState.INSUFFICIENT_EVIDENCE
+        # Observer views deliberately require a repeated, consistent pattern. They do
+        # not borrow evidence visible to somebody else.
+        positive = sum(event.polarity is EvidencePolarity.POSITIVE for event in events)
+        negative = sum(event.polarity is EvidencePolarity.NEGATIVE for event in events)
+        if len(events) < 2:
+            return TrustState.INSUFFICIENT_EVIDENCE
+        if positive and negative:
+            return TrustState.MIXED
+        if positive >= 2:
+            return TrustState.ESTABLISHED
+        if negative >= 2:
+            return TrustState.DEGRADED
+        return TrustState.DEVELOPING

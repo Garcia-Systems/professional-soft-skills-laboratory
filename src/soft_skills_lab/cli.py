@@ -130,6 +130,12 @@ def build_parser() -> argparse.ArgumentParser:
         command=commands.add_parser(name, help=help_text); command.add_argument("scenario_id")
     written=commands.add_parser("written-message",help="inspect structured written behavior"); written.add_argument("scenario_id"); written.add_argument("response_id")
     artifact=commands.add_parser("written-artifact",help="inspect a durable authored artifact"); artifact.add_argument("artifact_id")
+    history = commands.add_parser("trust-history", help="inspect domain-specific accumulated trust evidence")
+    history.add_argument("scenario_id")
+    trust_explain = commands.add_parser("trust-explain", help="explain one trust dimension from its evidence")
+    trust_explain.add_argument("scenario_id"); trust_explain.add_argument("dimension")
+    trust_view = commands.add_parser("trust-view", help="inspect only evidence available to one observer")
+    trust_view.add_argument("scenario_id"); trust_view.add_argument("--observer", required=True)
     return parser
 
 
@@ -1086,6 +1092,33 @@ def _written_artifact_text(artifact_id):
     try: return _written_text(ARTIFACTS[artifact_id])
     except KeyError: raise KeyError(f"unknown written artifact: {artifact_id}") from None
 
+def _trust_dimension(value: str):
+    from soft_skills_lab.trust import TrustDimension
+    try: return TrustDimension(value.casefold().replace("_", "-"))
+    except ValueError: raise KeyError(f"unknown trust dimension: {value}") from None
+
+def _trust_history_text(scenario_id: str, observer: str | None = None) -> str:
+    from soft_skills_lab.scenarios.trust_history import get_trust_history
+    from soft_skills_lab.trust import TrustDimension
+    history=get_trust_history(scenario_id)
+    title=f"TRUST HISTORY — {scenario_id.replace('-', ' ').upper()}" if observer is None else f"TRUST VIEW — {observer.upper()} — {scenario_id.replace('-', ' ').upper()}"
+    lines=[title,"",f"Subject: {history.subject}","No global score is calculated."]
+    for dimension in TrustDimension:
+        events=history.for_dimension(dimension,observer)
+        if not events and observer is None and dimension not in history.interpretations: continue
+        lines += ["",dimension.value.replace("-"," ").upper(),f"State: {history.state(dimension,observer).value}","","Evidence:"]
+        lines += [f"{event.polarity.value} {event.time}: {event.observable_behavior} [{event.provenance.value}; {event.event_id}]" for event in events] or ["  No available evidence."]
+    return "\n".join(lines)
+
+def _trust_explain_text(scenario_id: str, value: str) -> str:
+    from soft_skills_lab.scenarios.trust_history import get_trust_history
+    from soft_skills_lab.trust import DimensionInterpretation, TrustState
+    history=get_trust_history(scenario_id); dimension=_trust_dimension(value)
+    interpretation=history.interpretations.get(dimension,DimensionInterpretation(TrustState.INSUFFICIENT_EVIDENCE,"No authored pattern exists in this domain."))
+    lines=["DIMENSION",dimension.value.replace("-"," ").title(),"","CURRENT STATE",interpretation.state.value,"","WHY",interpretation.why,"","SUPPORTING EVENTS"]
+    lines += [f"{event.polarity.value} {event.time}: {event.observable_behavior} [{event.provenance.value}]" for event in history.for_dimension(dimension)] or ["- No evidence recorded."]
+    return "\n".join(lines)
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -1191,6 +1224,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _written_message_text(args.scenario_id,args.response_id)
         elif args.command == "written-artifact":
             output = _written_artifact_text(args.artifact_id)
+        elif args.command == "trust-history":
+            output = _trust_history_text(args.scenario_id)
+        elif args.command == "trust-explain":
+            output = _trust_explain_text(args.scenario_id, args.dimension)
+        elif args.command == "trust-view":
+            output = _trust_history_text(args.scenario_id, args.observer)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:

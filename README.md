@@ -397,6 +397,20 @@ python -m soft_skills_lab written-artifact security-escalation
 python -m soft_skills_lab written-artifact material-correction
 ```
 
+Practice Chapter 21's domain-specific evidence histories:
+
+```bash
+python -m soft_skills_lab scenario six-week-project
+python -m soft_skills_lab trust-history six-week-project
+python -m soft_skills_lab trust-explain six-week-project commitment-reliability
+python -m soft_skills_lab trust-explain six-week-project handoff-reliability
+python -m soft_skills_lab trust-view six-week-project --observer Morgan
+python -m soft_skills_lab trust-view six-week-project --observer Jordan
+python -m soft_skills_lab trust-view six-week-project --observer Dana
+python -m soft_skills_lab scenario trust-degradation
+python -m soft_skills_lab scenario trust-rebuilding
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
@@ -422,7 +436,7 @@ An installed `soft-skills-lab` entry point provides the same commands. The scena
 18. **Interview Communication** (implemented)
 19. **Meetings and Presence** (implemented)
 20. **Written Professional Communication** (implemented)
-21. Trust and Reputation
+21. **Trust and Reputation** (implemented)
 22. Leadership Without Authority
 23. Professional Judgment
 24. End-to-End Workplace Simulation
