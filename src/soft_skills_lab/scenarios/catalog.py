@@ -3,6 +3,9 @@
 from soft_skills_lab.domain.models import Commitment, Participant, ProfessionalResponse, RiskLevel, WorkplaceScenario
 from soft_skills_lab.evaluation.incident import INCIDENT_FACT
 from soft_skills_lab.scenarios.commitment import COMMITMENT_AT_RISK, RESPONSES as COMMITMENT_RESPONSES
+from soft_skills_lab.scenarios.listening import (
+    DEMO_RESPONSES, DEMO_STABILITY, SEARCH_RESPONSES, STAKEHOLDER_SEARCH, TEAMMATE_CONTRACT, TEAM_RESPONSES,
+)
 
 PRODUCTION_INCIDENT = WorkplaceScenario(
     scenario_id="production-incident",
@@ -57,6 +60,9 @@ RESPONSES = {
 SCENARIOS = {
     PRODUCTION_INCIDENT.scenario_id: (PRODUCTION_INCIDENT, RESPONSES),
     COMMITMENT_AT_RISK.scenario_id: (COMMITMENT_AT_RISK, COMMITMENT_RESPONSES),
+    DEMO_STABILITY.scenario_id: (DEMO_STABILITY, DEMO_RESPONSES),
+    TEAMMATE_CONTRACT.scenario_id: (TEAMMATE_CONTRACT, TEAM_RESPONSES),
+    STAKEHOLDER_SEARCH.scenario_id: (STAKEHOLDER_SEARCH, SEARCH_RESPONSES),
 }
 
 

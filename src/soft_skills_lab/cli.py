@@ -3,9 +3,10 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_incident_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_commitment_response, evaluate_incident_response, evaluate_listening_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
+from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
 from soft_skills_lab.trust import DEMO_EVENTS, ProfessionalTrust
 
 
@@ -19,6 +20,8 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("response_id")
     compare = commands.add_parser("compare", help="compare reference behaviors without a numeric ranking")
     compare.add_argument("scenario_id")
+    interpret = commands.add_parser("interpret", help="inspect the deterministic communication gap")
+    interpret.add_argument("scenario_id")
     commands.add_parser("trust-demo", help="show accumulated trust evidence")
     return parser
 
@@ -44,7 +47,10 @@ def _scenario_text(scenario_id: str) -> str:
 def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
-    evaluator = evaluate_commitment_response if scenario_id == "commitment-at-risk" else evaluate_incident_response
+    if get_scenario(scenario_id).communication_context:
+        evaluator = evaluate_listening_response
+    else:
+        evaluator = evaluate_commitment_response if scenario_id == "commitment-at-risk" else evaluate_incident_response
     for result in evaluator(response):
         lines.extend(("", f"Criterion: {result.criterion.criterion_id}", result.outcome.value, result.explanation))
         if result.evidence:
@@ -60,6 +66,15 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "demo-stability":
+        headings = ("CONCERN", "ASSUMPTIONS", "UNKNOWN", "NEXT ACTION", "FOLLOW-UP")
+        criterion_ids = ("captures-explicit-concern", "avoids-unsupported-assumption", "identifies-unknowns", "establishes-next-action", "establishes-follow-up")
+        lines = [f"{'PATH':25} " + " ".join(f"{heading:12}" for heading in headings)]
+        for response_id in LISTENING_RESPONSE_IDS:
+            results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_listening_response(get_response(scenario_id, response_id))}
+            lines.append(f"{response_id:25} " + " ".join(f"{results[item]:12}" for item in criterion_ids))
+        lines.append("\nOutcomes are shown criterion by criterion; this is not a listening or personality score.")
+        return "\n".join(lines)
     if scenario_id != "commitment-at-risk":
         raise KeyError(f"comparison unavailable for scenario: {scenario_id}")
     headings = ("EARLY RISK", "DEPENDENCY", "UNCERTAINTY", "FOLLOW-UP")
@@ -69,6 +84,21 @@ def _comparison_text(scenario_id: str) -> str:
         results = {item.criterion.criterion_id: item.outcome.value for item in evaluate_commitment_response(get_response(scenario_id, response_id))}
         lines.append(f"{response_id:21} " + " ".join(f"{results[item]:12}" for item in criterion_ids))
     lines.append("\nOutcomes are shown criterion by criterion; this is not a professionalism score.")
+    return "\n".join(lines)
+
+
+def _interpretation_text(scenario_id: str) -> str:
+    context = get_scenario(scenario_id).communication_context
+    if context is None:
+        raise KeyError(f"interpretation unavailable for scenario: {scenario_id}")
+    lines = ["EXPLICITLY COMMUNICATED", ""]
+    lines.extend(f"- {item}" for item in context.explicit_facts)
+    lines.extend(("", "POSSIBLE INTERPRETATIONS", ""))
+    lines.extend(f"- {item}" for item in context.possible_interpretations)
+    lines.extend(("", "NOT YET KNOWN", ""))
+    lines.extend(f"- {item}" for item in context.unknowns)
+    lines.extend(("", "UNSUPPORTED ASSUMPTIONS", ""))
+    lines.extend(f"- {item}" for item in context.unsupported_assumptions)
     return "\n".join(lines)
 
 
@@ -91,6 +121,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _evaluation_text(args.scenario_id, args.response_id)
         elif args.command == "compare":
             output = _comparison_text(args.scenario_id)
+        elif args.command == "interpret":
+            output = _interpretation_text(args.scenario_id)
         else:
             output = _trust_text()
     except KeyError as error:
