@@ -80,6 +80,30 @@ class TimelineEvent:
 
 
 @dataclass(frozen=True)
+class CommunicationContext:
+    """Scenario-authored meaning: no meaning is inferred from arbitrary text."""
+
+    explicit_facts: tuple[str, ...]
+    expressed_concern: str
+    requested_action: str | None = None
+    constraints: tuple[str, ...] = ()
+    unknowns: tuple[str, ...] = ()
+    possible_interpretations: tuple[str, ...] = ()
+    unsupported_assumptions: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ListenerInterpretation:
+    """Structured semantic observations attached to a reference response."""
+
+    understood_facts: tuple[str, ...] = ()
+    inferred_intent: tuple[str, ...] = ()
+    assumptions: tuple[str, ...] = ()
+    clarification_needed: tuple[str, ...] = ()
+    proposed_response: str | None = None
+
+
+@dataclass(frozen=True)
 class WorkplaceScenario:
     scenario_id: str
     title: str
@@ -89,6 +113,7 @@ class WorkplaceScenario:
     uncertainties: tuple[str, ...]
     commitments: tuple[Commitment, ...]
     current_risk: RiskLevel
+    communication_context: CommunicationContext | None = None
 
 
 @dataclass(frozen=True)
@@ -113,6 +138,11 @@ class ProfessionalResponse:
     follow_up_point: int | None = None
     loop_closed: bool = False
     delivered_on_time: bool | None = None
+    listener_interpretation: ListenerInterpretation | None = None
+    captures_explicit_concern: bool = False
+    distinguishes_fact_from_interpretation: bool = False
+    clarifies_success_condition: bool = False
+    respectful_disagreement: bool = False
 
 
 @dataclass(frozen=True)

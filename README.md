@@ -45,13 +45,27 @@ python -m soft_skills_lab evaluate commitment-at-risk professional-update
 python -m soft_skills_lab compare commitment-at-risk
 ```
 
+Practice Chapter 2's deterministic listening scenarios:
+
+```bash
+python -m soft_skills_lab scenario demo-stability
+python -m soft_skills_lab evaluate demo-stability premature-solution
+python -m soft_skills_lab evaluate demo-stability defensive-interpretation
+python -m soft_skills_lab evaluate demo-stability passive-acknowledgment
+python -m soft_skills_lab evaluate demo-stability listen-then-clarify
+python -m soft_skills_lab compare demo-stability
+python -m soft_skills_lab interpret demo-stability
+python -m soft_skills_lab scenario teammate-contract
+python -m soft_skills_lab scenario stakeholder-search
+```
+
 An installed `soft-skills-lab` entry point provides the same commands. The scenario catalog contains immutable domain values. Responses record structured behavioral evidence, and the evaluator applies explicit predicates to those fields rather than searching message text. This is intentionally a teaching model, not a natural-language judge.
 
 ## Volume I: Professional Reliability and Communication
 
 0. **The Executable Professional** (implemented)
 1. **Professionalism as Observable Behavior** (implemented)
-2. Listening Before Responding
+2. **Listening Before Responding** (implemented)
 3. Asking Good Questions
 4. Explaining Technical Ideas Simply
 5. Giving Status Updates
