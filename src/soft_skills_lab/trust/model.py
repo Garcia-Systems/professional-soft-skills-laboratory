@@ -87,6 +87,18 @@ class TrustEventKind(Enum):
     UNSUPPORTED_REASSURANCE_GIVEN = (-2, "Unsupported reassurance given")
     CRITICAL_DEPENDENCY_ABANDONED = (-3, "Critical dependency abandoned without update")
     REPEATED_IMPACT_WITHOUT_PLAN = (-3, "Repeated impact without plan")
+    PERFORMANCE_EXPECTATION_CLARIFIED = (1, "Performance expectation clarified")
+    RISK_VISIBILITY_IMPROVED = (2, "Risk visibility improved")
+    HANDOFF_BEHAVIOR_IMPROVED = (2, "Handoff behavior improved")
+    CHECKPOINT_COMPLETED = (1, "Checkpoint completed")
+    FEEDBACK_APPLIED = (2, "Feedback applied")
+    FACTUAL_DISAGREEMENT_HANDLED_PROFESSIONALLY = (1, "Factual disagreement handled professionally")
+    PLAN_BEHAVIOR_SUSTAINED = (2, "Plan behavior sustained")
+    SUPPORTED_FEEDBACK_DENIED = (-2, "Supported feedback denied")
+    VAGUE_PROMISE_REPEATED = (-1, "Vague promise repeated")
+    CHECKPOINT_MISSED_WITHOUT_UPDATE = (-2, "Checkpoint missed without update")
+    KNOWN_BEHAVIOR_GAP_REPEATED = (-2, "Known behavior gap repeated")
+    PLAN_EXPECTATION_IGNORED = (-2, "Plan expectation ignored")
 
     @property
     def weight(self) -> int:
@@ -204,4 +216,14 @@ PERSONAL_CAPACITY_EVENTS = (
     TrustEvent(TrustEventKind.UNSAFE_TASK_REASSIGNED, "A high-risk deployment was reassigned based on declared capacity."),
     TrustEvent(TrustEventKind.RECURRING_PATTERN_ADDRESSED, "Repeated morning impact led to a durable-plan discussion."),
     TrustEvent(TrustEventKind.REVISED_FOLLOW_UP_COMPLETED, "Alex reassessed the revised commitment when later evidence changed."),
+)
+
+PERFORMANCE_PLAN_EVENTS = (
+    TrustEvent(TrustEventKind.PERFORMANCE_EXPECTATION_CLARIFIED, "Alex and Morgan defined observable risk, handoff, and status behavior."),
+    TrustEvent(TrustEventKind.CHECKPOINT_COMPLETED, "Day 7 preserved positive evidence and the unexercised risk gap."),
+    TrustEvent(TrustEventKind.RISK_VISIBILITY_IMPROVED, "Alex surfaced the Day 14 material risk before indirect discovery."),
+    TrustEvent(TrustEventKind.HANDOFF_BEHAVIOR_IMPROVED, "Material handoffs reached acknowledgement during the plan."),
+    TrustEvent(TrustEventKind.FEEDBACK_APPLIED, "Alex corrected an incomplete status update at the next checkpoint."),
+    TrustEvent(TrustEventKind.FACTUAL_DISAGREEMENT_HANDLED_PROFESSIONALLY, "Alex corrected the T8 fact while engaging with valid visibility feedback."),
+    TrustEvent(TrustEventKind.PLAN_BEHAVIOR_SUSTAINED, "Defined behavior appeared across multiple relevant work events."),
 )

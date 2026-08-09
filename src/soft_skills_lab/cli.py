@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_listening_response, evaluate_manager_response, evaluate_personal_capacity_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
+from soft_skills_lab.evaluation import evaluate_collaboration_response, evaluate_commitment_response, evaluate_conflict_response, evaluate_disagreement_response, evaluate_explanation, evaluate_feedback_response, evaluate_incident_response, evaluate_incident_behavior, evaluate_listening_response, evaluate_manager_response, evaluate_personal_capacity_response, evaluate_performance_response, evaluate_question_response, evaluate_requirement_response, evaluate_responsibility_response, evaluate_stakeholder_response, evaluate_status_response, evaluate_uncertainty_response, evidence_for_commitment
 from soft_skills_lab.scenarios import get_response, get_scenario, list_responses
 from soft_skills_lab.scenarios.commitment import COMMITMENT, PRIMARY_RESPONSE_IDS, TIMELINE
 from soft_skills_lab.scenarios.listening import PRIMARY_RESPONSE_IDS as LISTENING_RESPONSE_IDS
@@ -107,6 +107,13 @@ def build_parser() -> argparse.ArgumentParser:
     impact = commands.add_parser("work-impact", help="inspect observable professional impact")
     impact.add_argument("scenario_id")
     commands.add_parser("personal-capacity-trust", help="show work-impact trust evidence")
+    plan = commands.add_parser("performance-plan", help="inspect an observable performance plan")
+    plan.add_argument("scenario_id")
+    performance_evidence = commands.add_parser("performance-evidence", help="separate plan evidence from broad claims")
+    performance_evidence.add_argument("scenario_id")
+    checkpoint = commands.add_parser("checkpoint", help="inspect a simulated performance checkpoint")
+    checkpoint.add_argument("scenario_id")
+    checkpoint.add_argument("--day", required=True, type=int)
     return parser
 
 
@@ -145,7 +152,9 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
     response = get_response(scenario_id, response_id)
     lines = [f"Response: {response.label}", response.message]
     scenario = get_scenario(scenario_id)
-    if scenario.work_impact is not None:
+    if scenario.performance_plan is not None:
+        results = evaluate_performance_response(scenario, response)
+    elif scenario.work_impact is not None:
         results = evaluate_personal_capacity_response(scenario, response)
     elif scenario.incident is not None:
         results = evaluate_incident_behavior(response)
@@ -194,6 +203,22 @@ def _evaluation_text(scenario_id: str, response_id: str) -> str:
 
 
 def _comparison_text(scenario_id: str) -> str:
+    if scenario_id == "communication-visibility":
+        headings = ("EVIDENCE", "EXPECTATIONS", "MEASUREMENT", "ACTION", "CHECKPOINTS")
+        dimensions = {
+            "panic-resignation": ("FAIL", "FAIL", "FAIL", "FAIL", "FAIL"),
+            "total-denial": ("FAIL", "FAIL", "FAIL", "FAIL", "FAIL"),
+            "automatic-confession": ("PARTIAL", "FAIL", "FAIL", "PARTIAL", "FAIL"),
+            "argue-every-example": ("PARTIAL", "FAIL", "FAIL", "FAIL", "FAIL"),
+            "vague-promise": ("PARTIAL", "PARTIAL", "FAIL", "PARTIAL", "FAIL"),
+            "passive-signoff": ("PARTIAL", "FAIL", "FAIL", "FAIL", "FAIL"),
+            "clarify-and-plan": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+            "execute-and-demonstrate": ("PASS", "PASS", "PASS", "PASS", "PASS"),
+        }
+        lines = [f"{'PATH':29} " + " ".join(f"{x:13}" for x in headings)]
+        lines.extend(f"{path:29} " + " ".join(f"{x:13}" for x in values) for path, values in dimensions.items())
+        lines.append("\nDimensions remain separate; no PIP success probability or employment prediction is calculated.")
+        return "\n".join(lines)
     if scenario_id == "personal-capacity":
         headings = ("IMPACT", "PRIVACY", "COMMITMENT", "SUPPORT", "DEPENDENCIES")
         dimensions = {
@@ -904,6 +929,42 @@ def _personal_capacity_trust_text() -> str:
     return "\n".join(("PERSONAL CAPACITY TRUST EVIDENCE", *(f"- {e.kind.label} ({e.kind.weight:+d}): {e.detail}" for e in PERSONAL_CAPACITY_EVENTS),
         "", "Only observable professional behavior is recorded; no private cause is stored."))
 
+def _performance_plan(scenario_id: str):
+    plan = get_scenario(scenario_id).performance_plan
+    if plan is None:
+        raise KeyError(f"scenario has no performance plan: {scenario_id}")
+    return plan
+
+def _performance_plan_text(scenario_id: str) -> str:
+    plan = _performance_plan(scenario_id)
+    lines = ("PERFORMANCE PLAN", plan.title, "", "PARTICIPANT", plan.participant, "", "MANAGER", plan.manager)
+    output = list(lines)
+    for number, concern in enumerate(plan.concerns, 1):
+        output.extend(("", f"CONCERN {number}", concern.claim, "", "EVIDENCE", *(f"- {x}" for x in concern.supporting_examples),
+            "", "EXPECTED BEHAVIOR", concern.expected_behavior, "", "MEASUREMENT", concern.measurement.statement))
+    output.extend(("", "ACTIONS", *(f"- When {x.trigger}, {x.owner} will {x.behavior}." for x in plan.actions),
+        "", "CHECKPOINTS", *(f"Day {x.day}" for x in plan.checkpoints), "", "SUCCESS CONDITION", plan.success_condition,
+        "", "BOUNDARY", "This plan evaluates defined behavior only; it does not predict employment consequences."))
+    return "\n".join(output)
+
+def _performance_evidence_text(scenario_id: str) -> str:
+    plan = _performance_plan(scenario_id)
+    supported = tuple(example for concern in plan.concerns for example in concern.supporting_examples)
+    return "\n".join(("SUPPORTED EXAMPLES", "", *(f"- {x}" for x in supported), "", "POSITIVE EVIDENCE", "",
+        *(f"- {x}" for x in plan.positive_evidence), "", "UNSUPPORTED OR OVERBROAD CLAIMS", "",
+        *(f'- "{x}"' for x in plan.unsupported_claims), "", "Supported concerns can be engaged while unsupported statements remain disputed."))
+
+def _checkpoint_text(scenario_id: str, day: int) -> str:
+    checkpoint = next((item for item in _performance_plan(scenario_id).checkpoints if item.day == day), None)
+    if checkpoint is None:
+        raise KeyError(f"no checkpoint at Day {day} for {scenario_id}")
+    return "\n".join((f"CHECKPOINT DAY {day}", "", "CONCERNS REVIEWED", *(f"- {x}" for x in checkpoint.concerns_reviewed),
+        "", "EVIDENCE SINCE LAST CHECKPOINT", *(f"- {x}" for x in checkpoint.evidence_since_last),
+        "", "IMPROVEMENT OBSERVED", *(f"- {x}" for x in checkpoint.improvement_observed),
+        "", "UNRESOLVED GAPS", *(f"- {x}" for x in checkpoint.unresolved_gaps or ("None recorded.",)),
+        "", "MANAGER FEEDBACK", checkpoint.manager_feedback, "", "EMPLOYEE RESPONSE", checkpoint.employee_response,
+        "", "NEXT ACTIONS", *(f"- {x}" for x in checkpoint.next_actions)))
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -985,6 +1046,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             output = _work_impact_text(args.scenario_id)
         elif args.command == "personal-capacity-trust":
             output = _personal_capacity_trust_text()
+        elif args.command == "performance-plan":
+            output = _performance_plan_text(args.scenario_id)
+        elif args.command == "performance-evidence":
+            output = _performance_evidence_text(args.scenario_id)
+        elif args.command == "checkpoint":
+            output = _checkpoint_text(args.scenario_id, args.day)
         elif args.command == "disagreement-trust":
             output = _disagreement_trust_text()
         else:
